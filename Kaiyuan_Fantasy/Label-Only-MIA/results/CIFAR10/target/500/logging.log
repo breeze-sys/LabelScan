@@ -1,0 +1,801 @@
+======================Train_Target_Model 500 ====================
+TargetModel Train Epoch: 1 [0/500 (0%)]	Loss: 2.311717
+
+TargetModel Test: Average loss: 0.0183, Accuracy: 111/1000 (11%)
+
+TargetModel Train Epoch: 2 [0/500 (0%)]	Loss: 1.957367
+
+TargetModel Test: Average loss: 0.0195, Accuracy: 111/1000 (11%)
+
+TargetModel Train Epoch: 3 [0/500 (0%)]	Loss: 1.591519
+
+TargetModel Test: Average loss: 0.0227, Accuracy: 111/1000 (11%)
+
+TargetModel Train Epoch: 4 [0/500 (0%)]	Loss: 1.356023
+
+TargetModel Test: Average loss: 0.0292, Accuracy: 110/1000 (11%)
+
+TargetModel Train Epoch: 5 [0/500 (0%)]	Loss: 1.097536
+
+TargetModel Test: Average loss: 0.0303, Accuracy: 112/1000 (11%)
+
+TargetModel Train Epoch: 6 [0/500 (0%)]	Loss: 0.879533
+
+TargetModel Test: Average loss: 0.0338, Accuracy: 116/1000 (12%)
+
+TargetModel Train Epoch: 7 [0/500 (0%)]	Loss: 0.656996
+
+TargetModel Test: Average loss: 0.0374, Accuracy: 127/1000 (13%)
+
+TargetModel Train Epoch: 8 [0/500 (0%)]	Loss: 0.527193
+
+TargetModel Test: Average loss: 0.0411, Accuracy: 132/1000 (13%)
+
+TargetModel Train Epoch: 9 [0/500 (0%)]	Loss: 0.384207
+
+TargetModel Test: Average loss: 0.0396, Accuracy: 131/1000 (13%)
+
+TargetModel Train Epoch: 10 [0/500 (0%)]	Loss: 0.352196
+
+TargetModel Test: Average loss: 0.0279, Accuracy: 203/1000 (20%)
+
+TargetModel Train Epoch: 11 [0/500 (0%)]	Loss: 0.343638
+
+TargetModel Test: Average loss: 0.0224, Accuracy: 252/1000 (25%)
+
+TargetModel Train Epoch: 12 [0/500 (0%)]	Loss: 0.226584
+
+TargetModel Test: Average loss: 0.0216, Accuracy: 321/1000 (32%)
+
+TargetModel Train Epoch: 13 [0/500 (0%)]	Loss: 0.195669
+
+TargetModel Test: Average loss: 0.0213, Accuracy: 336/1000 (34%)
+
+TargetModel Train Epoch: 14 [0/500 (0%)]	Loss: 0.106517
+
+TargetModel Test: Average loss: 0.0239, Accuracy: 317/1000 (32%)
+
+TargetModel Train Epoch: 15 [0/500 (0%)]	Loss: 0.044745
+
+TargetModel Test: Average loss: 0.0209, Accuracy: 356/1000 (36%)
+
+TargetModel Train Epoch: 16 [0/500 (0%)]	Loss: 0.045838
+
+TargetModel Test: Average loss: 0.0280, Accuracy: 320/1000 (32%)
+
+TargetModel Train Epoch: 17 [0/500 (0%)]	Loss: 0.077093
+
+TargetModel Test: Average loss: 0.0231, Accuracy: 366/1000 (37%)
+
+TargetModel Train Epoch: 18 [0/500 (0%)]	Loss: 0.047453
+
+TargetModel Test: Average loss: 0.0240, Accuracy: 387/1000 (39%)
+
+TargetModel Train Epoch: 19 [0/500 (0%)]	Loss: 0.026155
+
+TargetModel Test: Average loss: 0.0279, Accuracy: 346/1000 (35%)
+
+TargetModel Train Epoch: 20 [0/500 (0%)]	Loss: 0.013104
+
+TargetModel Test: Average loss: 0.0239, Accuracy: 379/1000 (38%)
+
+TargetModel Train Epoch: 21 [0/500 (0%)]	Loss: 0.009971
+
+TargetModel Test: Average loss: 0.0263, Accuracy: 384/1000 (38%)
+
+TargetModel Train Epoch: 22 [0/500 (0%)]	Loss: 0.030289
+
+TargetModel Test: Average loss: 0.0256, Accuracy: 355/1000 (36%)
+
+TargetModel Train Epoch: 23 [0/500 (0%)]	Loss: 0.032744
+
+TargetModel Test: Average loss: 0.0215, Accuracy: 404/1000 (40%)
+
+TargetModel Train Epoch: 24 [0/500 (0%)]	Loss: 0.013995
+
+TargetModel Test: Average loss: 0.0230, Accuracy: 398/1000 (40%)
+
+TargetModel Train Epoch: 25 [0/500 (0%)]	Loss: 0.015624
+
+TargetModel Test: Average loss: 0.0223, Accuracy: 422/1000 (42%)
+
+TargetModel Train Epoch: 26 [0/500 (0%)]	Loss: 0.005830
+
+TargetModel Test: Average loss: 0.0222, Accuracy: 417/1000 (42%)
+
+TargetModel Train Epoch: 27 [0/500 (0%)]	Loss: 0.009309
+
+TargetModel Test: Average loss: 0.0235, Accuracy: 422/1000 (42%)
+
+TargetModel Train Epoch: 28 [0/500 (0%)]	Loss: 0.002571
+
+TargetModel Test: Average loss: 0.0209, Accuracy: 452/1000 (45%)
+
+TargetModel Train Epoch: 29 [0/500 (0%)]	Loss: 0.002012
+
+TargetModel Test: Average loss: 0.0217, Accuracy: 415/1000 (42%)
+
+TargetModel Train Epoch: 30 [0/500 (0%)]	Loss: 0.002547
+
+TargetModel Test: Average loss: 0.0215, Accuracy: 428/1000 (43%)
+
+TargetModel Train Epoch: 31 [0/500 (0%)]	Loss: 0.001666
+
+TargetModel Test: Average loss: 0.0211, Accuracy: 438/1000 (44%)
+
+TargetModel Train Epoch: 32 [0/500 (0%)]	Loss: 0.001025
+
+TargetModel Test: Average loss: 0.0218, Accuracy: 433/1000 (43%)
+
+TargetModel Train Epoch: 33 [0/500 (0%)]	Loss: 0.001458
+
+TargetModel Test: Average loss: 0.0214, Accuracy: 436/1000 (44%)
+
+TargetModel Train Epoch: 34 [0/500 (0%)]	Loss: 0.000926
+
+TargetModel Test: Average loss: 0.0216, Accuracy: 430/1000 (43%)
+
+TargetModel Train Epoch: 35 [0/500 (0%)]	Loss: 0.000735
+
+TargetModel Test: Average loss: 0.0217, Accuracy: 434/1000 (43%)
+
+TargetModel Train Epoch: 36 [0/500 (0%)]	Loss: 0.000779
+
+TargetModel Test: Average loss: 0.0215, Accuracy: 440/1000 (44%)
+
+TargetModel Train Epoch: 37 [0/500 (0%)]	Loss: 0.000753
+
+TargetModel Test: Average loss: 0.0212, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 38 [0/500 (0%)]	Loss: 0.000615
+
+TargetModel Test: Average loss: 0.0211, Accuracy: 456/1000 (46%)
+
+TargetModel Train Epoch: 39 [0/500 (0%)]	Loss: 0.000509
+
+TargetModel Test: Average loss: 0.0211, Accuracy: 453/1000 (45%)
+
+TargetModel Train Epoch: 40 [0/500 (0%)]	Loss: 0.000447
+
+TargetModel Test: Average loss: 0.0211, Accuracy: 451/1000 (45%)
+
+TargetModel Train Epoch: 41 [0/500 (0%)]	Loss: 0.000409
+
+TargetModel Test: Average loss: 0.0212, Accuracy: 455/1000 (46%)
+
+TargetModel Train Epoch: 42 [0/500 (0%)]	Loss: 0.000382
+
+TargetModel Test: Average loss: 0.0212, Accuracy: 456/1000 (46%)
+
+TargetModel Train Epoch: 43 [0/500 (0%)]	Loss: 0.000361
+
+TargetModel Test: Average loss: 0.0213, Accuracy: 454/1000 (45%)
+
+TargetModel Train Epoch: 44 [0/500 (0%)]	Loss: 0.000344
+
+TargetModel Test: Average loss: 0.0213, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 45 [0/500 (0%)]	Loss: 0.000330
+
+TargetModel Test: Average loss: 0.0214, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 46 [0/500 (0%)]	Loss: 0.000317
+
+TargetModel Test: Average loss: 0.0214, Accuracy: 452/1000 (45%)
+
+TargetModel Train Epoch: 47 [0/500 (0%)]	Loss: 0.000306
+
+TargetModel Test: Average loss: 0.0215, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 48 [0/500 (0%)]	Loss: 0.000296
+
+TargetModel Test: Average loss: 0.0215, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 49 [0/500 (0%)]	Loss: 0.000286
+
+TargetModel Test: Average loss: 0.0215, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 50 [0/500 (0%)]	Loss: 0.000277
+
+TargetModel Test: Average loss: 0.0216, Accuracy: 446/1000 (45%)
+
+TargetModel Train Epoch: 51 [0/500 (0%)]	Loss: 0.000269
+
+TargetModel Test: Average loss: 0.0216, Accuracy: 446/1000 (45%)
+
+TargetModel Train Epoch: 52 [0/500 (0%)]	Loss: 0.000261
+
+TargetModel Test: Average loss: 0.0216, Accuracy: 446/1000 (45%)
+
+TargetModel Train Epoch: 53 [0/500 (0%)]	Loss: 0.000253
+
+TargetModel Test: Average loss: 0.0216, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 54 [0/500 (0%)]	Loss: 0.000246
+
+TargetModel Test: Average loss: 0.0216, Accuracy: 446/1000 (45%)
+
+TargetModel Train Epoch: 55 [0/500 (0%)]	Loss: 0.000239
+
+TargetModel Test: Average loss: 0.0216, Accuracy: 446/1000 (45%)
+
+TargetModel Train Epoch: 56 [0/500 (0%)]	Loss: 0.000233
+
+TargetModel Test: Average loss: 0.0216, Accuracy: 446/1000 (45%)
+
+TargetModel Train Epoch: 57 [0/500 (0%)]	Loss: 0.000227
+
+TargetModel Test: Average loss: 0.0217, Accuracy: 446/1000 (45%)
+
+TargetModel Train Epoch: 58 [0/500 (0%)]	Loss: 0.000221
+
+TargetModel Test: Average loss: 0.0217, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 59 [0/500 (0%)]	Loss: 0.000216
+
+TargetModel Test: Average loss: 0.0217, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 60 [0/500 (0%)]	Loss: 0.000211
+
+TargetModel Test: Average loss: 0.0217, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 61 [0/500 (0%)]	Loss: 0.000206
+
+TargetModel Test: Average loss: 0.0217, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 62 [0/500 (0%)]	Loss: 0.000201
+
+TargetModel Test: Average loss: 0.0217, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 63 [0/500 (0%)]	Loss: 0.000196
+
+TargetModel Test: Average loss: 0.0218, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 64 [0/500 (0%)]	Loss: 0.000192
+
+TargetModel Test: Average loss: 0.0218, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 65 [0/500 (0%)]	Loss: 0.000188
+
+TargetModel Test: Average loss: 0.0218, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 66 [0/500 (0%)]	Loss: 0.000184
+
+TargetModel Test: Average loss: 0.0218, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 67 [0/500 (0%)]	Loss: 0.000180
+
+TargetModel Test: Average loss: 0.0218, Accuracy: 446/1000 (45%)
+
+TargetModel Train Epoch: 68 [0/500 (0%)]	Loss: 0.000176
+
+TargetModel Test: Average loss: 0.0218, Accuracy: 446/1000 (45%)
+
+TargetModel Train Epoch: 69 [0/500 (0%)]	Loss: 0.000172
+
+TargetModel Test: Average loss: 0.0219, Accuracy: 446/1000 (45%)
+
+TargetModel Train Epoch: 70 [0/500 (0%)]	Loss: 0.000168
+
+TargetModel Test: Average loss: 0.0219, Accuracy: 446/1000 (45%)
+
+TargetModel Train Epoch: 71 [0/500 (0%)]	Loss: 0.000165
+
+TargetModel Test: Average loss: 0.0219, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 72 [0/500 (0%)]	Loss: 0.000162
+
+TargetModel Test: Average loss: 0.0219, Accuracy: 446/1000 (45%)
+
+TargetModel Train Epoch: 73 [0/500 (0%)]	Loss: 0.000158
+
+TargetModel Test: Average loss: 0.0219, Accuracy: 446/1000 (45%)
+
+TargetModel Train Epoch: 74 [0/500 (0%)]	Loss: 0.000155
+
+TargetModel Test: Average loss: 0.0219, Accuracy: 446/1000 (45%)
+
+TargetModel Train Epoch: 75 [0/500 (0%)]	Loss: 0.000152
+
+TargetModel Test: Average loss: 0.0219, Accuracy: 446/1000 (45%)
+
+TargetModel Train Epoch: 76 [0/500 (0%)]	Loss: 0.000149
+
+TargetModel Test: Average loss: 0.0220, Accuracy: 446/1000 (45%)
+
+TargetModel Train Epoch: 77 [0/500 (0%)]	Loss: 0.000147
+
+TargetModel Test: Average loss: 0.0220, Accuracy: 446/1000 (45%)
+
+TargetModel Train Epoch: 78 [0/500 (0%)]	Loss: 0.000144
+
+TargetModel Test: Average loss: 0.0220, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 79 [0/500 (0%)]	Loss: 0.000141
+
+TargetModel Test: Average loss: 0.0220, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 80 [0/500 (0%)]	Loss: 0.000139
+
+TargetModel Test: Average loss: 0.0220, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 81 [0/500 (0%)]	Loss: 0.000136
+
+TargetModel Test: Average loss: 0.0220, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 82 [0/500 (0%)]	Loss: 0.000134
+
+TargetModel Test: Average loss: 0.0221, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 83 [0/500 (0%)]	Loss: 0.000132
+
+TargetModel Test: Average loss: 0.0221, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 84 [0/500 (0%)]	Loss: 0.000129
+
+TargetModel Test: Average loss: 0.0221, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 85 [0/500 (0%)]	Loss: 0.000127
+
+TargetModel Test: Average loss: 0.0221, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 86 [0/500 (0%)]	Loss: 0.000125
+
+TargetModel Test: Average loss: 0.0221, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 87 [0/500 (0%)]	Loss: 0.000123
+
+TargetModel Test: Average loss: 0.0221, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 88 [0/500 (0%)]	Loss: 0.000121
+
+TargetModel Test: Average loss: 0.0221, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 89 [0/500 (0%)]	Loss: 0.000119
+
+TargetModel Test: Average loss: 0.0221, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 90 [0/500 (0%)]	Loss: 0.000117
+
+TargetModel Test: Average loss: 0.0222, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 91 [0/500 (0%)]	Loss: 0.000115
+
+TargetModel Test: Average loss: 0.0222, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 92 [0/500 (0%)]	Loss: 0.000113
+
+TargetModel Test: Average loss: 0.0222, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 93 [0/500 (0%)]	Loss: 0.000111
+
+TargetModel Test: Average loss: 0.0222, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 94 [0/500 (0%)]	Loss: 0.000110
+
+TargetModel Test: Average loss: 0.0222, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 95 [0/500 (0%)]	Loss: 0.000108
+
+TargetModel Test: Average loss: 0.0222, Accuracy: 447/1000 (45%)
+
+TargetModel Train Epoch: 96 [0/500 (0%)]	Loss: 0.000106
+
+TargetModel Test: Average loss: 0.0222, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 97 [0/500 (0%)]	Loss: 0.000105
+
+TargetModel Test: Average loss: 0.0222, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 98 [0/500 (0%)]	Loss: 0.000103
+
+TargetModel Test: Average loss: 0.0223, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 99 [0/500 (0%)]	Loss: 0.000102
+
+TargetModel Test: Average loss: 0.0223, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 100 [0/500 (0%)]	Loss: 0.000100
+
+TargetModel Test: Average loss: 0.0223, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 101 [0/500 (0%)]	Loss: 0.000099
+
+TargetModel Test: Average loss: 0.0223, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 102 [0/500 (0%)]	Loss: 0.000097
+
+TargetModel Test: Average loss: 0.0223, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 103 [0/500 (0%)]	Loss: 0.000096
+
+TargetModel Test: Average loss: 0.0223, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 104 [0/500 (0%)]	Loss: 0.000095
+
+TargetModel Test: Average loss: 0.0223, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 105 [0/500 (0%)]	Loss: 0.000093
+
+TargetModel Test: Average loss: 0.0223, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 106 [0/500 (0%)]	Loss: 0.000092
+
+TargetModel Test: Average loss: 0.0224, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 107 [0/500 (0%)]	Loss: 0.000091
+
+TargetModel Test: Average loss: 0.0224, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 108 [0/500 (0%)]	Loss: 0.000089
+
+TargetModel Test: Average loss: 0.0224, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 109 [0/500 (0%)]	Loss: 0.000088
+
+TargetModel Test: Average loss: 0.0224, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 110 [0/500 (0%)]	Loss: 0.000087
+
+TargetModel Test: Average loss: 0.0224, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 111 [0/500 (0%)]	Loss: 0.000086
+
+TargetModel Test: Average loss: 0.0224, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 112 [0/500 (0%)]	Loss: 0.000085
+
+TargetModel Test: Average loss: 0.0224, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 113 [0/500 (0%)]	Loss: 0.000084
+
+TargetModel Test: Average loss: 0.0224, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 114 [0/500 (0%)]	Loss: 0.000082
+
+TargetModel Test: Average loss: 0.0224, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 115 [0/500 (0%)]	Loss: 0.000081
+
+TargetModel Test: Average loss: 0.0225, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 116 [0/500 (0%)]	Loss: 0.000080
+
+TargetModel Test: Average loss: 0.0225, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 117 [0/500 (0%)]	Loss: 0.000079
+
+TargetModel Test: Average loss: 0.0225, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 118 [0/500 (0%)]	Loss: 0.000078
+
+TargetModel Test: Average loss: 0.0225, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 119 [0/500 (0%)]	Loss: 0.000077
+
+TargetModel Test: Average loss: 0.0225, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 120 [0/500 (0%)]	Loss: 0.000076
+
+TargetModel Test: Average loss: 0.0225, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 121 [0/500 (0%)]	Loss: 0.000075
+
+TargetModel Test: Average loss: 0.0225, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 122 [0/500 (0%)]	Loss: 0.000074
+
+TargetModel Test: Average loss: 0.0225, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 123 [0/500 (0%)]	Loss: 0.000074
+
+TargetModel Test: Average loss: 0.0225, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 124 [0/500 (0%)]	Loss: 0.000073
+
+TargetModel Test: Average loss: 0.0225, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 125 [0/500 (0%)]	Loss: 0.000072
+
+TargetModel Test: Average loss: 0.0226, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 126 [0/500 (0%)]	Loss: 0.000071
+
+TargetModel Test: Average loss: 0.0226, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 127 [0/500 (0%)]	Loss: 0.000070
+
+TargetModel Test: Average loss: 0.0226, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 128 [0/500 (0%)]	Loss: 0.000069
+
+TargetModel Test: Average loss: 0.0226, Accuracy: 451/1000 (45%)
+
+TargetModel Train Epoch: 129 [0/500 (0%)]	Loss: 0.000068
+
+TargetModel Test: Average loss: 0.0226, Accuracy: 451/1000 (45%)
+
+TargetModel Train Epoch: 130 [0/500 (0%)]	Loss: 0.000068
+
+TargetModel Test: Average loss: 0.0226, Accuracy: 451/1000 (45%)
+
+TargetModel Train Epoch: 131 [0/500 (0%)]	Loss: 0.000067
+
+TargetModel Test: Average loss: 0.0226, Accuracy: 451/1000 (45%)
+
+TargetModel Train Epoch: 132 [0/500 (0%)]	Loss: 0.000066
+
+TargetModel Test: Average loss: 0.0226, Accuracy: 451/1000 (45%)
+
+TargetModel Train Epoch: 133 [0/500 (0%)]	Loss: 0.000065
+
+TargetModel Test: Average loss: 0.0226, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 134 [0/500 (0%)]	Loss: 0.000065
+
+TargetModel Test: Average loss: 0.0226, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 135 [0/500 (0%)]	Loss: 0.000064
+
+TargetModel Test: Average loss: 0.0227, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 136 [0/500 (0%)]	Loss: 0.000063
+
+TargetModel Test: Average loss: 0.0227, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 137 [0/500 (0%)]	Loss: 0.000062
+
+TargetModel Test: Average loss: 0.0227, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 138 [0/500 (0%)]	Loss: 0.000062
+
+TargetModel Test: Average loss: 0.0227, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 139 [0/500 (0%)]	Loss: 0.000061
+
+TargetModel Test: Average loss: 0.0227, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 140 [0/500 (0%)]	Loss: 0.000060
+
+TargetModel Test: Average loss: 0.0227, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 141 [0/500 (0%)]	Loss: 0.000060
+
+TargetModel Test: Average loss: 0.0227, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 142 [0/500 (0%)]	Loss: 0.000059
+
+TargetModel Test: Average loss: 0.0227, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 143 [0/500 (0%)]	Loss: 0.000059
+
+TargetModel Test: Average loss: 0.0227, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 144 [0/500 (0%)]	Loss: 0.000058
+
+TargetModel Test: Average loss: 0.0227, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 145 [0/500 (0%)]	Loss: 0.000057
+
+TargetModel Test: Average loss: 0.0227, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 146 [0/500 (0%)]	Loss: 0.000057
+
+TargetModel Test: Average loss: 0.0228, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 147 [0/500 (0%)]	Loss: 0.000056
+
+TargetModel Test: Average loss: 0.0228, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 148 [0/500 (0%)]	Loss: 0.000056
+
+TargetModel Test: Average loss: 0.0228, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 149 [0/500 (0%)]	Loss: 0.000055
+
+TargetModel Test: Average loss: 0.0228, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 150 [0/500 (0%)]	Loss: 0.000054
+
+TargetModel Test: Average loss: 0.0228, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 151 [0/500 (0%)]	Loss: 0.000054
+
+TargetModel Test: Average loss: 0.0228, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 152 [0/500 (0%)]	Loss: 0.000053
+
+TargetModel Test: Average loss: 0.0228, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 153 [0/500 (0%)]	Loss: 0.000053
+
+TargetModel Test: Average loss: 0.0228, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 154 [0/500 (0%)]	Loss: 0.000052
+
+TargetModel Test: Average loss: 0.0228, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 155 [0/500 (0%)]	Loss: 0.000052
+
+TargetModel Test: Average loss: 0.0228, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 156 [0/500 (0%)]	Loss: 0.000051
+
+TargetModel Test: Average loss: 0.0228, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 157 [0/500 (0%)]	Loss: 0.000051
+
+TargetModel Test: Average loss: 0.0229, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 158 [0/500 (0%)]	Loss: 0.000050
+
+TargetModel Test: Average loss: 0.0229, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 159 [0/500 (0%)]	Loss: 0.000050
+
+TargetModel Test: Average loss: 0.0229, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 160 [0/500 (0%)]	Loss: 0.000049
+
+TargetModel Test: Average loss: 0.0229, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 161 [0/500 (0%)]	Loss: 0.000049
+
+TargetModel Test: Average loss: 0.0229, Accuracy: 451/1000 (45%)
+
+TargetModel Train Epoch: 162 [0/500 (0%)]	Loss: 0.000048
+
+TargetModel Test: Average loss: 0.0229, Accuracy: 451/1000 (45%)
+
+TargetModel Train Epoch: 163 [0/500 (0%)]	Loss: 0.000048
+
+TargetModel Test: Average loss: 0.0229, Accuracy: 451/1000 (45%)
+
+TargetModel Train Epoch: 164 [0/500 (0%)]	Loss: 0.000047
+
+TargetModel Test: Average loss: 0.0229, Accuracy: 451/1000 (45%)
+
+TargetModel Train Epoch: 165 [0/500 (0%)]	Loss: 0.000047
+
+TargetModel Test: Average loss: 0.0229, Accuracy: 451/1000 (45%)
+
+TargetModel Train Epoch: 166 [0/500 (0%)]	Loss: 0.000046
+
+TargetModel Test: Average loss: 0.0229, Accuracy: 451/1000 (45%)
+
+TargetModel Train Epoch: 167 [0/500 (0%)]	Loss: 0.000046
+
+TargetModel Test: Average loss: 0.0229, Accuracy: 451/1000 (45%)
+
+TargetModel Train Epoch: 168 [0/500 (0%)]	Loss: 0.000046
+
+TargetModel Test: Average loss: 0.0229, Accuracy: 451/1000 (45%)
+
+TargetModel Train Epoch: 169 [0/500 (0%)]	Loss: 0.000045
+
+TargetModel Test: Average loss: 0.0230, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 170 [0/500 (0%)]	Loss: 0.000045
+
+TargetModel Test: Average loss: 0.0230, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 171 [0/500 (0%)]	Loss: 0.000044
+
+TargetModel Test: Average loss: 0.0230, Accuracy: 451/1000 (45%)
+
+TargetModel Train Epoch: 172 [0/500 (0%)]	Loss: 0.000044
+
+TargetModel Test: Average loss: 0.0230, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 173 [0/500 (0%)]	Loss: 0.000044
+
+TargetModel Test: Average loss: 0.0230, Accuracy: 450/1000 (45%)
+
+TargetModel Train Epoch: 174 [0/500 (0%)]	Loss: 0.000043
+
+TargetModel Test: Average loss: 0.0230, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 175 [0/500 (0%)]	Loss: 0.000043
+
+TargetModel Test: Average loss: 0.0230, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 176 [0/500 (0%)]	Loss: 0.000042
+
+TargetModel Test: Average loss: 0.0230, Accuracy: 449/1000 (45%)
+
+TargetModel Train Epoch: 177 [0/500 (0%)]	Loss: 0.000042
+
+TargetModel Test: Average loss: 0.0230, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 178 [0/500 (0%)]	Loss: 0.000042
+
+TargetModel Test: Average loss: 0.0230, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 179 [0/500 (0%)]	Loss: 0.000041
+
+TargetModel Test: Average loss: 0.0230, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 180 [0/500 (0%)]	Loss: 0.000041
+
+TargetModel Test: Average loss: 0.0230, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 181 [0/500 (0%)]	Loss: 0.000041
+
+TargetModel Test: Average loss: 0.0230, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 182 [0/500 (0%)]	Loss: 0.000040
+
+TargetModel Test: Average loss: 0.0230, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 183 [0/500 (0%)]	Loss: 0.000040
+
+TargetModel Test: Average loss: 0.0231, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 184 [0/500 (0%)]	Loss: 0.000040
+
+TargetModel Test: Average loss: 0.0231, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 185 [0/500 (0%)]	Loss: 0.000039
+
+TargetModel Test: Average loss: 0.0231, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 186 [0/500 (0%)]	Loss: 0.000039
+
+TargetModel Test: Average loss: 0.0231, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 187 [0/500 (0%)]	Loss: 0.000039
+
+TargetModel Test: Average loss: 0.0231, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 188 [0/500 (0%)]	Loss: 0.000038
+
+TargetModel Test: Average loss: 0.0231, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 189 [0/500 (0%)]	Loss: 0.000038
+
+TargetModel Test: Average loss: 0.0231, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 190 [0/500 (0%)]	Loss: 0.000038
+
+TargetModel Test: Average loss: 0.0231, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 191 [0/500 (0%)]	Loss: 0.000037
+
+TargetModel Test: Average loss: 0.0231, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 192 [0/500 (0%)]	Loss: 0.000037
+
+TargetModel Test: Average loss: 0.0231, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 193 [0/500 (0%)]	Loss: 0.000037
+
+TargetModel Test: Average loss: 0.0231, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 194 [0/500 (0%)]	Loss: 0.000036
+
+TargetModel Test: Average loss: 0.0231, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 195 [0/500 (0%)]	Loss: 0.000036
+
+TargetModel Test: Average loss: 0.0231, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 196 [0/500 (0%)]	Loss: 0.000036
+
+TargetModel Test: Average loss: 0.0232, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 197 [0/500 (0%)]	Loss: 0.000035
+
+TargetModel Test: Average loss: 0.0232, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 198 [0/500 (0%)]	Loss: 0.000035
+
+TargetModel Test: Average loss: 0.0232, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 199 [0/500 (0%)]	Loss: 0.000035
+
+TargetModel Test: Average loss: 0.0232, Accuracy: 448/1000 (45%)
+
+TargetModel Train Epoch: 200 [0/500 (0%)]	Loss: 0.000035
+
+TargetModel Test: Average loss: 0.0232, Accuracy: 448/1000 (45%)
+
