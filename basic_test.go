@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	// ⚠️ 确保这个路径和你 go.mod 第一行的名字完全一致
-	basic "label-only-mia-go/pkg/mathutils"
+	basic "Label-Only-MIA-Go/pkg/mathutils"
 )
 
 // 辅助函数：用于比较两个浮点数切片是否相等（允许微小误差）
