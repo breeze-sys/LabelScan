@@ -133,7 +133,7 @@ func (atk *HSJA) binarySearch(original, adversarial []float32, targetLabel int, 
 	high := 1.0
 	boundaryPoint := adversarial
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 15; i++ {
 		mid := (low + high) / 2.0
 		
 		// mathutils/geometry.go 应包含 Interpolate
