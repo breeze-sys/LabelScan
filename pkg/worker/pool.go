@@ -1,7 +1,7 @@
 package worker
 
 import (
-	"LabelScan-Go/core"
+	"Label-Only-MIA-Go/pkg/core"
 	"fmt"
 	"sync"
 )
@@ -30,7 +30,7 @@ func (a *Auditor) RunAudit(samples []core.Sample) []core.AttackResult {
 			defer wg.Done()
 			for s := range jobs {
 				// 运行队长写的攻击逻辑，并将 Model 借给他用
-				res := a.Attacker.Attack(a.Model, s)
+				res := a.Attacker.Attack(s,a.Model)
 				resultsChan <- res
 			}
 		}()

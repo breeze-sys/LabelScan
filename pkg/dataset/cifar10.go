@@ -1,7 +1,7 @@
 package dataset
 
 import (
-	"LabelScan-Go/core"
+	"Label-Only-MIA-Go/pkg/core"
 	"bufio"
 	"fmt"
 	"io"

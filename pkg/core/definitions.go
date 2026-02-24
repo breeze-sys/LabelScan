@@ -1,5 +1,4 @@
 package core
-
 // ==========================================
 // 1. 全局配置与常量
 // ==========================================
@@ -22,10 +21,12 @@ type Image []float32
 
 // Sample 代表一个测试样本
 type Sample struct {
-	ID       int    // 样本序号
-	Data     Image  // 图片数据
-	Label    int    // 真实标签 (Ground Truth)
-	Filename string // 原文件名
+	ID          int    `json:"id"`
+	Data        Image  `json:"image"`
+	Label       int    `json:"label"`        // 真标签
+	TargetLabel int    `json:"target_label"` // 影子重标标签
+	IsMember    bool   `json:"is_member"`
+	Filename    string `json:"filename"`
 }
 
 // AttackResult 存储攻击结果 (用于写入 CSV)

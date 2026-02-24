@@ -1,7 +1,7 @@
 package worker
 
 import (
-	"LabelScan-Go/core"
+	"Label-Only-MIA-Go/pkg/core"
 	"fmt"
 	"sync"
 )
