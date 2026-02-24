@@ -4,7 +4,7 @@ type Image []float32
 
 type Sample struct {
 	ID          int    `json:"id"`
-	Data        Image  `json:"pixels"`
+	Data        Image  `json:"image"`
 	Label       int    `json:"label"`        // 真标签
 	TargetLabel int    `json:"target_label"` // 影子重标标签
 	IsMember    bool   `json:"is_member"`
