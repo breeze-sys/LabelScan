@@ -1,8 +1,9 @@
 package attack
+
 import (
-	"math"
 	"Label-Only-MIA-Go/pkg/core"
 	"Label-Only-MIA-Go/pkg/mathutils"
+	"math"
 )
 
 // HSJAConfig 配置攻击参数
@@ -23,21 +24,27 @@ type HSJA struct {
 // NewHSJA 创建攻击器
 func NewHSJA(cfg HSJAConfig) *HSJA {
 	if cfg.MaxQueries == 0 {
-        cfg.MaxQueries = 10000 // 默认给 1万次查询机会，防止还没跑就退出了
-    }
-	if cfg.NumEvals == 0 { cfg.NumEvals = 100 }
-	if cfg.MaxIterations == 0 { cfg.MaxIterations = 50 }
-	if cfg.InitEvals == 0 { cfg.InitEvals = 100 }
-	if cfg.ClipMax == 0 { cfg.ClipMax = 1.0 }
+		cfg.MaxQueries = 10000
+	}
+	if cfg.NumEvals == 0 {
+		cfg.NumEvals = 100
+	}
+	if cfg.MaxIterations == 0 {
+		cfg.MaxIterations = 50
+	}
+	if cfg.InitEvals == 0 {
+		cfg.InitEvals = 100
+	}
+	if cfg.ClipMax == 0 {
+		cfg.ClipMax = 1.0
+	}
 	return &HSJA{config: cfg}
 }
 
 // Attack 实现 core.Attacker 接口
 func (atk *HSJA) Attack(sample core.Sample, model core.Model) core.AttackResult {
-	// 记录查询次数
 	queries := 0
-	
-	// 封装一个带计数的预测函数
+
 	predictFunc := func(img []float32) int {
 		queries++
 		l, _ := model.Predict(img)
@@ -47,46 +54,37 @@ func (atk *HSJA) Attack(sample core.Sample, model core.Model) core.AttackResult 
 	original := sample.Data
 	targetLabel := sample.Label
 
-	// 1. 初始化：寻找初始对抗样本
+	// 1. 初始化
 	xAdv := atk.initialize(original, targetLabel, predictFunc)
-	
-	// 如果无法初始化（找不到任何对抗样本），则攻击失败
 	if xAdv == nil {
 		return core.AttackResult{
 			SampleID: sample.ID, OriginalLabel: targetLabel, FinalLabel: targetLabel,
-			IsSuccess: false, Queries: queries, Distance: 0.0, IsMember: false, // 距离无法计算
+			IsSuccess: false, Queries: queries, Distance: 0.0, IsMember: false,
 		}
 	}
 
-	// 2. 二分查找：找到决策边界
+	// 2. 初始二分查找
 	xAdv = atk.binarySearch(original, xAdv, targetLabel, predictFunc)
-
-	// 3. 迭代优化
-	// 计算初始 L2 距离 (注意: L2Distance 返回 float64)
 	dist := mathutils.L2Distance(original, xAdv)
 
+	// 3. 迭代优化循环
 	for i := 0; i < atk.config.MaxIterations; i++ {
-		// 检查查询次数限制
 		if queries >= atk.config.MaxQueries {
 			break
 		}
 
-		// A. 梯度估计
+		// A. 梯度估计 (已使用 PredictBatch 优化)
 		delta := atk.computeDelta(float32(dist), i)
-		grad := atk.approximateGradient(xAdv, targetLabel, delta, predictFunc)
+		grad := atk.approximateGradient(xAdv, targetLabel, delta, model, &queries)
 
-		// B. 几何级数步进 (Geometric Progression)
+		// B. 几何级数步进
 		stepSize := atk.computeStepSize(float32(dist), i)
-		
-		// x_new = x_adv + step_size * grad
-		// 修正：使用 VectorScale 和 VectorAdd
 		stepVec := mathutils.VectorScale(grad, stepSize)
 		xNew := mathutils.VectorAdd(xAdv, stepVec)
-		
+
 		// C. 投影与裁剪
-		// 投影回合法像素范围 (Box Constraint)
 		xNew = mathutils.Clip(xNew, atk.config.ClipMin, atk.config.ClipMax)
-		
+
 		// D. 再次二分查找，确保贴紧边界
 		xNew = atk.binarySearch(original, xNew, targetLabel, predictFunc)
 
@@ -96,7 +94,7 @@ func (atk *HSJA) Attack(sample core.Sample, model core.Model) core.AttackResult 
 			dist = newDist
 			xAdv = xNew
 		}
-	}
+	} // <--- 循环在这里结束，包含了所有优化步骤
 
 	// 获取最终标签
 	finalLabel := predictFunc(xAdv)
@@ -108,7 +106,7 @@ func (atk *HSJA) Attack(sample core.Sample, model core.Model) core.AttackResult 
 		IsSuccess:     finalLabel != targetLabel,
 		Queries:       queries,
 		Distance:      dist,
-		IsMember:      false, // 具体的 Member 判定逻辑通常在 CSV 分析阶段或根据 Threshold 判定
+		IsMember:      sample.IsMember,
 	}
 }
 
@@ -117,12 +115,9 @@ func (atk *HSJA) initialize(original []float32, label int, predict func([]float3
 	if predict(original) != label {
 		return original
 	}
-
 	inputSize := len(original)
 	for i := 0; i < atk.config.InitEvals; i++ {
-		// 修正：假设 GenUniform 在 noise.go 中
 		noise := mathutils.GenUniform(inputSize, float64(atk.config.ClipMin), float64(atk.config.ClipMax))
-		
 		if predict(noise) != label {
 			return noise
 		}
@@ -138,10 +133,6 @@ func (atk *HSJA) binarySearch(original, adversarial []float32, targetLabel int, 
 
 	for i := 0; i < 15; i++ {
 		mid := (low + high) / 2.0
-		
-		// mathutils/geometry.go 应包含 Interpolate
-		// candidate = original + (adversarial - original) * mid
-		// 即: Interpolate(original, adversarial, mid)
 		candidate := mathutils.Interpolate(original, adversarial, float32(mid))
 		candidate = mathutils.Clip(candidate, atk.config.ClipMin, atk.config.ClipMax)
 
@@ -155,46 +146,53 @@ func (atk *HSJA) binarySearch(original, adversarial []float32, targetLabel int, 
 	return boundaryPoint
 }
 
-// approximateGradient 梯度估计
-func (atk *HSJA) approximateGradient(sample []float32, label int, delta float32, predict func([]float32) int) []float32 {
+// approximateGradient 梯度估计 (批量优化版)
+func (atk *HSJA) approximateGradient(sample []float32, label int, delta float32, model core.Model, queries *int) []float32 {
 	numEvals := atk.config.NumEvals
 	inputSize := len(sample)
-	var validDirections [][]float32
+
+	batchImgs := make([]core.Image, numEvals)
+	noises := make([][]float32, numEvals)
 
 	for j := 0; j < numEvals; j++ {
-		// 1. 生成高斯噪声 (noise.go)
 		noise := mathutils.GenGaussian(inputSize, 0, 1)
-		
-		// 2. 归一化 (geometry.go)
 		noise = mathutils.Normalize(noise)
-		
-		// 3. 构造扰动: sample + delta * noise
+		noises[j] = noise
+
 		perturbation := mathutils.VectorScale(noise, delta)
 		posPoint := mathutils.VectorAdd(sample, perturbation)
 		posPoint = mathutils.Clip(posPoint, atk.config.ClipMin, atk.config.ClipMax)
-		
-		// 4. 查询并记录方向
-		pred := predict(posPoint)
+
+		batchImgs[j] = posPoint
+	}
+
+	// 调用批量接口
+	preds, err := model.PredictBatch(batchImgs)
+	if err != nil {
+		return mathutils.NewVector(inputSize, 0)
+	}
+	*queries += numEvals
+
+	var validDirections [][]float32
+	for j, pred := range preds {
 		if pred != label {
-			validDirections = append(validDirections, noise)
+			validDirections = append(validDirections, noises[j])
 		} else {
-			// 方向取反: -1 * noise
-			validDirections = append(validDirections, mathutils.VectorScale(noise, -1.0))
+			validDirections = append(validDirections, mathutils.VectorScale(noises[j], -1.0))
 		}
 	}
 
-	// 5. 平均并归一化 (stats.go / geometry.go)
 	if len(validDirections) == 0 {
-		return mathutils.NewVector(inputSize, 0) // basic.go
+		return mathutils.NewVector(inputSize, 0)
 	}
-	
-	// 修正：假设 MeanVector 在 stats.go 中
 	grad := mathutils.MeanVector(validDirections)
 	return mathutils.Normalize(grad)
 }
 
 func (atk *HSJA) computeDelta(dist float32, iter int) float32 {
-	if iter == 0 { return 0.1 }
+	if iter == 0 {
+		return 0.1
+	}
 	return dist * 0.1 / float32(math.Sqrt(float64(iter)))
 }
 

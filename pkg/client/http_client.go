@@ -80,20 +80,20 @@ func (c *HTTPClient) Predict(img core.Image) (int, error) {
 		return -1, fmt.Errorf("JSON编码失败: %v", err)
 	}
 
-	 // 3. 发送 POST 请求
-    resp, err := c.httpClient.Post(c.url, "application/json", bytes.NewBuffer(jsonData))
-    if err != nil {
-        fmt.Printf("💥 请求发送失败: %v\n", err) // <--- 新增打印
-        return -1, fmt.Errorf("请求发送失败: %v", err)
-    }
-    defer resp.Body.Close()
+	// 3. 发送 POST 请求
+	resp, err := c.httpClient.Post(c.url, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		fmt.Printf("💥 请求发送失败: %v\n", err) // <--- 新增打印
+		return -1, fmt.Errorf("请求发送失败: %v", err)
+	}
+	defer resp.Body.Close()
 
-    // 4. 检查状态码
-    if resp.StatusCode != http.StatusOK {
-        bodyBytes, _ := io.ReadAll(resp.Body)
-        fmt.Printf("💥 服务器返回错误 (Code %d): %s\n", resp.StatusCode, string(bodyBytes)) // <--- 新增打印
-        return -1, fmt.Errorf("服务器报错...")
-    }
+	// 4. 检查状态码
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		fmt.Printf("💥 服务器返回错误 (Code %d): %s\n", resp.StatusCode, string(bodyBytes)) // <--- 新增打印
+		return -1, fmt.Errorf("服务器报错...")
+	}
 
 	// 5. 解析返回结果
 	var result responseBody
@@ -105,20 +105,59 @@ func (c *HTTPClient) Predict(img core.Image) (int, error) {
 	// 6. 返回预测的 Label
 	return result.Label, nil
 }
+
 // GetInputSize 返回模型需要的输入维度
 func (c *HTTPClient) GetInputSize() int {
 	return core.FlattenedSize // 3072
 }
 
 // PredictBatch 批量预测 (目前 HTTP 接口只支持单张，这里用循环模拟，或者后续你升级 Python 端支持 Batch)
+// 2. 修改 PredictBatch 函数
 func (c *HTTPClient) PredictBatch(imgs []core.Image) ([]int, error) {
-	results := make([]int, len(imgs))
-	for i, img := range imgs {
-		label, err := c.Predict(img)
-		if err != nil {
-			return nil, err
-		}
-		results[i] = label
+	if len(imgs) == 0 {
+		return []int{}, nil
 	}
-	return results, nil
+
+	// 将 core.Image 数组转换为标准二维数组供 JSON 序列化
+	rawImgs := make([][]float32, len(imgs))
+	for i, img := range imgs {
+		rawImgs[i] = img
+	}
+
+	// 准备批量请求体
+	payload := batchRequest{Images: rawImgs}
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("批量JSON编码失败: %v", err)
+	}
+
+	// 注意：根据 A 的 server.py，批量接口通常是单图接口路径 + "_batch"
+	// 比如你的 url 是 .../predict，那么批量接口就是 .../predict_batch
+	batchURL := c.url + "_batch"
+
+	resp, err := c.httpClient.Post(batchURL, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, fmt.Errorf("批量请求发送失败: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("服务器批量接口报错，状态码: %d", resp.StatusCode)
+	}
+
+	var result batchResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("解析批量响应失败: %v", err)
+	}
+
+	return result.Labels, nil
+}
+
+// 1. 定义批量请求和响应的内部结构体（需对应 Python 端 V3 协议）
+type batchRequest struct {
+	Images [][]float32 `json:"images"` // 注意是复数 images
+}
+
+type batchResponse struct {
+	Labels []int `json:"labels"` // 注意是复数 labels
 }
