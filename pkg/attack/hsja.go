@@ -22,9 +22,13 @@ type HSJA struct {
 
 // NewHSJA 创建攻击器
 func NewHSJA(cfg HSJAConfig) *HSJA {
+	if cfg.MaxQueries == 0 {
+        cfg.MaxQueries = 10000 // 默认给 1万次查询机会，防止还没跑就退出了
+    }
 	if cfg.NumEvals == 0 { cfg.NumEvals = 100 }
 	if cfg.MaxIterations == 0 { cfg.MaxIterations = 50 }
 	if cfg.InitEvals == 0 { cfg.InitEvals = 100 }
+	if cfg.ClipMax == 0 { cfg.ClipMax = 1.0 }
 	return &HSJA{config: cfg}
 }
 

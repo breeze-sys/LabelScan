@@ -20,7 +20,7 @@ import (
 // HTTPClient 封装了与 Python 服务端的通信逻辑
 // 它实现了 core.Model 接口
 type HTTPClient struct {
-	url        string       // Python 服务的地址，例如 http://127.0.0.1:5000/predict
+	url        string       // Python 服务的地址
 	httpClient *http.Client // 内置的 http 客户端，用于管理连接池
 }
 
@@ -80,20 +80,20 @@ func (c *HTTPClient) Predict(img core.Image) (int, error) {
 		return -1, fmt.Errorf("JSON编码失败: %v", err)
 	}
 
-	// 3. 发送 POST 请求
-	// 使用 c.httpClient 而不是 http.Post，以复用连接
-	resp, err := c.httpClient.Post(c.url, "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		return -1, fmt.Errorf("请求发送失败: %v", err)
-	}
-	defer resp.Body.Close() // 必须关闭，否则内存泄露
+	 // 3. 发送 POST 请求
+    resp, err := c.httpClient.Post(c.url, "application/json", bytes.NewBuffer(jsonData))
+    if err != nil {
+        fmt.Printf("💥 请求发送失败: %v\n", err) // <--- 新增打印
+        return -1, fmt.Errorf("请求发送失败: %v", err)
+    }
+    defer resp.Body.Close()
 
-	// 4. 检查状态码
-	if resp.StatusCode != http.StatusOK {
-		// 读取错误信息
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		return -1, fmt.Errorf("服务器报错 (Code %d): %s", resp.StatusCode, string(bodyBytes))
-	}
+    // 4. 检查状态码
+    if resp.StatusCode != http.StatusOK {
+        bodyBytes, _ := io.ReadAll(resp.Body)
+        fmt.Printf("💥 服务器返回错误 (Code %d): %s\n", resp.StatusCode, string(bodyBytes)) // <--- 新增打印
+        return -1, fmt.Errorf("服务器报错...")
+    }
 
 	// 5. 解析返回结果
 	var result responseBody
@@ -104,4 +104,21 @@ func (c *HTTPClient) Predict(img core.Image) (int, error) {
 
 	// 6. 返回预测的 Label
 	return result.Label, nil
+}
+// GetInputSize 返回模型需要的输入维度
+func (c *HTTPClient) GetInputSize() int {
+	return core.FlattenedSize // 3072
+}
+
+// PredictBatch 批量预测 (目前 HTTP 接口只支持单张，这里用循环模拟，或者后续你升级 Python 端支持 Batch)
+func (c *HTTPClient) PredictBatch(imgs []core.Image) ([]int, error) {
+	results := make([]int, len(imgs))
+	for i, img := range imgs {
+		label, err := c.Predict(img)
+		if err != nil {
+			return nil, err
+		}
+		results[i] = label
+	}
+	return results, nil
 }

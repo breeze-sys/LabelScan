@@ -20,7 +20,7 @@ from classifier import CNN
 MODEL_ARCH = 'CNN7'       
 DATASET_NAME = 'CIFAR10' 
 # 请确认这个路径是你本地真实存在的
-CHECKPOINT_PATH = 'results/CIFAR10/target/3000/best_checkpoint_ep.pth' 
+CHECKPOINT_PATH = 'CIFAR10/target/3000/best_checkpoint_ep.pth' 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # 图像规格常量 (必须与 Go 端的 constants 保持一致)
