@@ -23,7 +23,7 @@ func main() {
 	dataPath := flag.String("data", "./data/test_batch.bin", "CIFAR-10 数据集路径")
 	limit := flag.Int("limit", 100, "攻击样本数量 (-1 代表全部)")
 	workers := flag.Int("workers", 20, "并发工人数 (Goroutines)")
-	
+
 	// HSJA 算法参数配置
 	maxIter := flag.Int("max_iter", 50, "HSJA: 最大迭代次数")
 	numEvals := flag.Int("evals", 100, "HSJA: 梯度估算的查询次数")
@@ -65,8 +65,8 @@ func main() {
 	fmt.Println("UNKNOWN... 正在加载数据...")
 	// 注意：IsMemberSet 设为 false，假设我们攻击的是测试集（非成员）
 	// 如果你跑的是训练集，这里应该设为 true
-	loader := &dataset.CifarLoader{IsMemberSet: false} 
-	
+	loader := &dataset.CifarLoader{IsMemberSet: false}
+
 	samples, err := loader.LoadBatch(*dataPath, *limit)
 	if err != nil {
 		log.Fatalf("❌ 数据加载失败: %v", err)
@@ -76,13 +76,13 @@ func main() {
 	// ========================================================================
 	// 3. 执行并发审计 (核心逻辑)
 	// ========================================================================
-	
+
 	startTime := time.Now()
 
 	// [Worker] 初始化审计员并开始干活
 	// 这里的 NewAuditor 和 RunAudit 正是你提供的 pool.go 里的逻辑
 	auditor := worker.NewAuditor(modelClient, attacker, *workers)
-	
+
 	// 开始跑！这里会阻塞直到所有图片处理完毕
 	results := auditor.RunAudit(samples)
 
@@ -103,7 +103,7 @@ func printReport(results []core.AttackResult, duration time.Duration) {
 
 	fmt.Println("\n📊 实时攻击日志:")
 	fmt.Println("----------------------------------------")
-	
+
 	for _, res := range results {
 		status := "❌ 失败"
 		if res.IsSuccess {
@@ -116,7 +116,7 @@ func printReport(results []core.AttackResult, duration time.Duration) {
 		totalQueries += res.Queries
 
 		// 简单打印日志
-		fmt.Printf("ID: %-4d | %s | Label: %d->%d | Dist: %.4f | Q: %d\n", 
+		fmt.Printf("ID: %-4d | %s | Label: %d->%d | Dist: %.4f | Q: %d\n",
 			res.SampleID, status, res.OriginalLabel, res.FinalLabel, res.Distance, res.Queries)
 	}
 
@@ -125,7 +125,7 @@ func printReport(results []core.AttackResult, duration time.Duration) {
 	if validDistCount > 0 {
 		avgDist = totalDist / float64(validDistCount)
 	}
-	
+
 	successRate := float64(successCount) / float64(len(results)) * 100
 	avgTime := duration / time.Duration(len(results))
 
@@ -138,4 +138,31 @@ func printReport(results []core.AttackResult, duration time.Duration) {
 	fmt.Printf("📏 平均扰动距离 : %.4f (L2)\n", avgDist)
 	fmt.Printf("🔍 总查询次数   : %d\n", totalQueries)
 	fmt.Println("========================================")
+	// ==========================================
+	// 新增：模型健康度检查 (Quality Check)
+	// ==========================================
+	initialCorrectCount := 0
+	totalSamples := len(results) // 假设你的结果切片叫 results
+
+	fmt.Println("\n🔎 [正在进行模型健康度审计]...")
+	for _, res := range results {
+		// 逻辑：如果攻击距离(Distance) > 0，说明模型一开始预测对了，
+		// 算法费了劲才把它改错，这是有效攻击。
+		// 如果 Distance == 0，说明模型一开始就错了，这是无效样本。
+		if res.Distance > 1e-4 { // 大于 0.0001
+			initialCorrectCount++
+		}
+	}
+
+	accuracy := float64(initialCorrectCount) / float64(totalSamples) * 100
+	fmt.Printf("✅ 有效攻击样本 (模型初始预测正确): %d / %d\n", initialCorrectCount, totalSamples)
+	fmt.Printf("📊 模型实际准确率 (Model Accuracy): %.2f%%\n", accuracy)
+
+	if accuracy < 50.0 {
+		fmt.Println("⚠️ [严重警告] 模型准确率极低！可能是权重加载错误或数据没对齐！")
+		fmt.Println("👉 此时的攻击速度没有参考价值，因为大多数时候算法直接跳过了。")
+	} else {
+		fmt.Println("👍 模型状态健康，攻击耗时数据真实有效。")
+	}
+	// ==========================================
 }
