@@ -129,3 +129,45 @@ func TestClone(t *testing.T) {
 		fmt.Println("  深拷贝验证通过")
 	}
 }
+
+func TestMeanAndStd(t *testing.T) {
+	fmt.Println("=== 测试 MeanAndStd ===")
+	// 测试数据：1, 2, 3, 4, 5
+	// 期望平均值：3.0
+	// 样本方差 (n-1)：10 / 4 = 2.5
+	// 样本标准差：sqrt(2.5) ≈ 1.5811388
+	data := []float64{1.0, 2.0, 3.0, 4.0, 5.0}
+
+	mean, std := basic.MeanAndStd(data)
+	fmt.Printf("  Mean: %v, Std: %v\n", mean, std)
+
+	if math.Abs(mean-3.0) > 1e-5 {
+		t.Errorf("Mean 计算错误: 期望 3.0, 实际 %v", mean)
+	}
+	if math.Abs(std-1.5811388) > 1e-5 {
+		t.Errorf("Std 计算错误: 期望 ~1.5811388, 实际 %v", std)
+	}
+}
+
+func TestCalibrateReference(t *testing.T) {
+	fmt.Println("=== 测试 CalibrateReference ===")
+	// 模拟3个路人的数据，每个路人测试3张图，仅用于跑通逻辑
+	// 注意真实场景是 10 个路人
+	dists := [][]float64{
+		{1.0, 1.1, 0.9}, // Mean: 1.0, Std: 0.1, CV: 0.1
+		{2.0, 2.2, 1.8}, // Mean: 2.0, Std: 0.2, CV: 0.1
+		{3.0, 3.3, 2.7}, // Mean: 3.0, Std: 0.3, CV: 0.1
+	}
+
+	tauD, tauCV := basic.CalibrateReference(dists)
+	fmt.Printf("  tauD: %v, tauCV: %v\n", tauD, tauCV)
+
+	// dBarList: {1.0, 2.0, 3.0} => muD: 2.0, sD: 1.0 => tauD: 2.0 + 1.92 * 1.0 = 3.92
+	// cvList: {0.1, 0.1, 0.1} => muCV: 0.1, sCV: 0.0 => tauCV: 0.1 - 1.92 * 0.0 = 0.1
+	if math.Abs(tauD-3.92) > 1e-5 {
+		t.Errorf("tauD 计算错误: 期望 3.92, 实际 %v", tauD)
+	}
+	if math.Abs(tauCV-0.1) > 1e-5 {
+		t.Errorf("tauCV 计算错误: 期望 0.1, 实际 %v", tauCV)
+	}
+}

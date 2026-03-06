@@ -99,3 +99,79 @@ func Softmax(logits []float32) []float32 {
 
 	return probs
 }
+
+// MeanAndStd 计算一组 float64 切片的均值 (Mean) 和样本标准差 (Sample Standard Deviation)
+// 样本标准差使用 n-1 的自由度 (Bessel's correction)
+func MeanAndStd(data []float64) (mean float64, std float64) {
+	if len(data) == 0 {
+		return 0, 0
+	}
+	
+	n := float64(len(data))
+	
+	// 计算均值
+	var sum float64
+	for _, v := range data {
+		sum += v
+	}
+	mean = sum / n
+
+	// 元素过少时，标准差记为0以防除零
+	if len(data) < 2 {
+		return mean, 0.0
+	}
+
+	// 计算样本标准差
+	var varianceSum float64
+	for _, v := range data {
+		diff := v - mean
+		varianceSum += diff * diff
+	}
+	
+	// 自由度为 n-1
+	variance := varianceSum / (n - 1)
+	std = math.Sqrt(variance)
+	
+	return mean, std
+}
+
+// CalibrateReference 计算路人集的统计基准，产出动态双阈值 (tau_d, tau_cv)
+// 输入: dists 是一个二维切片，dists[i] 代表第 i 个路人图的 11 个测距值（1张原图 + 10个变体）
+// 输出: tauD (距离阈值上限), tauCV (波动率/变异系数的阈值下限)
+func CalibrateReference(dists [][]float64) (tauD float64, tauCV float64) {
+	var dBarList []float64
+	var cvList []float64
+
+	// 第二步：计算每张路人图的特征值（样本内统计）
+	for _, group := range dists {
+		if len(group) == 0 {
+			continue
+		}
+		
+		m, s := MeanAndStd(group)
+		
+		// 记录出该路人图的平均距离
+		dBarList = append(dBarList, m)
+		
+		// 计算并记录变异系数 CV = 标准差 / 均值
+		if m != 0 {
+			cvList = append(cvList, s/m)
+		} else {
+			cvList = append(cvList, 0.0) // 容错处理
+		}
+	}
+
+	// 第三步：计算全局基准（参考集统计）
+	muD, sD := MeanAndStd(dBarList)
+	muCV, sCV := MeanAndStd(cvList)
+
+	// 第四步：确定最终阈值 \tau （预测区间公式）
+	// 基于 n=10, 95% 置信度的 t 分布常数为 1.92
+	const tDistCoeff = 1.92
+
+	// 距离阈值（上限判定）：如果目标样本 > tauD，且 cv < tauCV 则确认为成员
+	tauD = muD + tDistCoeff*sD
+	tauCV = muCV - tDistCoeff*sCV
+
+	return tauD, tauCV
+}
