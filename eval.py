@@ -13,7 +13,8 @@ def parse_args():
     parser.add_argument("--ref", type=str, default="data/baseline_dists.json", help="Reference baseline stats output from Go")
     parser.add_argument("--test", type=str, default="data/audit_results.json", help="Audit results output from Go")
     parser.add_argument("--out", type=str, default="audit_report.csv", help="Output audit report path")
-    parser.add_argument("--plot", type=str, default="risk_map.png", help="Output 2D risk map path")    return parser.parse_args()
+    parser.add_argument("--plot", type=str, default="risk_map.png", help="Output 2D risk map path")   
+    return parser.parse_args()
 
 def calculate_thresholds(reference_dists):
     """

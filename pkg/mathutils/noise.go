@@ -87,3 +87,40 @@ func GenUniform(size int, min, max float64) []float32 {
 	}
 	return result
 }
+
+// GenerateVariants 为原始图像生成指定数量的微扰变体（由 Member C 调用）
+// 输入:
+//   - original: 原始图像 [0.1, 0.5, ...]
+//   - sigma: 扰动强度（标准差），通常取 0.001
+//   - count: 需要生成的变体数量（通常为 10）
+//
+// 功能: 基于 Member B 的 rng 生成噪声，并进行像素叠加和 [0.0, 1.0] 裁剪
+func GenerateVariants(original []float32, sigma float64, count int) [][]float32 {
+	// 1. 加锁：确保在并发 Worker Pool 中生成随机数时不会冲突
+	rngMutex.Lock()
+	defer rngMutex.Unlock()
+
+	size := len(original)
+	variants := make([][]float32, count)
+
+	for i := 0; i < count; i++ {
+		v := make([]float32, size)
+		for j := 0; j < size; j++ {
+			// 2. 调用 Member B 初始化好的全局随机源
+			noise := rng.NormFloat64() * sigma
+
+			// 3. 叠加并裁剪
+			val := float64(original[j]) + noise
+
+			// 4. 边界约束：保证像素合法性
+			if val > 1.0 {
+				val = 1.0
+			} else if val < 0.0 {
+				val = 0.0
+			}
+			v[j] = float32(val)
+		}
+		variants[i] = v
+	}
+	return variants
+}

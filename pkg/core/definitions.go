@@ -1,14 +1,12 @@
 package core
+
 // ==========================================
-// 1. 全局配置与常量
+// 1. 全局配置与常量 (保持现状)
 // ==========================================
 const (
-	// 图片规格 (CIFAR-10)
-	ImgChannels = 3
-	ImgHeight   = 32
-	ImgWidth    = 32
-
-	// 展平后的向量长度: 3 * 32 * 32 = 3072
+	ImgChannels   = 3
+	ImgHeight     = 32
+	ImgWidth      = 32
 	FlattenedSize = ImgChannels * ImgHeight * ImgWidth
 )
 
@@ -16,49 +14,63 @@ const (
 // 2. 核心数据类型
 // ==========================================
 
-// Image 基础数据单元，使用 float32
+// Image 基础数据单元
 type Image []float32
 
 // Sample 代表一个测试样本
 type Sample struct {
 	ID          int    `json:"id"`
 	Data        Image  `json:"image"`
-	Label       int    `json:"label"`        // 真标签
-	TargetLabel int    `json:"target_label"` // 影子重标标签
-	IsMember    bool   `json:"is_member"`
+	Label       int    `json:"label"`        // 原始分类标签
+	TargetLabel int    `json:"target_label"` // 影子模型重标后的标签 (用于算迁移Loss)
+	IsMember    bool   `json:"is_member"`    // 真实身份：是否为训练集成员 (用于对账)
 	Filename    string `json:"filename"`
 }
 
-// AttackResult 存储攻击结果 (用于写入 CSV)
-type AttackResult struct {
-	SampleID      int     // 样本 ID
-	OriginalLabel int     // 原始标签
-	FinalLabel    int     // 攻击后的标签
-	IsSuccess     bool    // 攻击是否成功
-	Queries       int     // 查询次数
-	Distance      float64 // 最终 L2 距离 (MIA 核心指标)
-	IsMember      bool    // 判定结果 (是否为训练集成员)
+// AuditResult 存储多维审计报告 (这是你的核心输出)
+type AuditResult struct {
+	SampleID     int
+	Label        int
+	IsMemberTrue bool // 真相标签
+
+	// 维度一：迁移攻击得分
+	ShadowLoss float64
+
+	// 维度二 & 三：边界探测得分
+	MeanDistance float64 // d-bar
+	VolatilityCV float64 // CV (标准差/均值)
+
+	// 最终判决结论
+	Conclusion string // "🔴 【 确认为模型成员 】" 等
 }
 
 // ==========================================
-// 3. 接口契约
+// 3. 接口契约 (A, B, C 三方的握手标准)
 // ==========================================
 
-// Model 接口：队友 B (API Client) 必须实现此接口
-// Attack 模块只通过这个接口与模型交互
+// Model 接口：队友 A (API 实现者) 必须支持 Logits 返回
 type Model interface {
-	// Predict 输入向量，返回 Label。
-	// 错误处理：如果是网络错误，返回 error，Attack 应该处理重试或退出
+	// Predict 返回最终标签 (Label-Only 基础功能)
 	Predict(img Image) (int, error)
-	PredictBatch(imgs []Image) ([]int,error)// 涡轮增压接口
-	// GetInputSize 返回模型需要的输入维度 (3072)
+
+	// PredictBatch 批量预测 (HSJA 涡轮增压)
+	PredictBatch(imgs []Image) ([]int, error)
+
+	// PredictLogits 返回原始概率/分数数组 (为了在 Go 本地算 Loss)
+	PredictLogits(img Image) ([]float32, error)
+
 	GetInputSize() int
 }
 
-// Attacker 接口：定义攻击逻辑的标准
+// Attacker 接口：定义探测内核的标准 (例如 HSJA)
+// 注意：它返回的是探测过程的原始数据，交给 Engine 进行最终审计
 type Attacker interface {
-	// Attack 执行攻击
-	// 输入: 原始样本, 目标模型
-	// 输出: 攻击结果
 	Attack(sample Sample, model Model) AttackResult
+}
+
+// AttackResult 仅作为 Attacker (如 HSJA) 的原始输出
+type AttackResult struct {
+	SampleID int
+	Distance float64 // 探测到的到边界的距离
+	Queries  int     // 消耗的查询次数
 }

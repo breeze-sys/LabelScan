@@ -9,6 +9,26 @@ import (
 // 对应 Python: numpy (argmax, mean), torch.nn.functional (softmax)
 // ============================================================================
 
+// CrossEntropy 计算交叉熵损失 (用于判定迁移攻击信号)
+// probs: 经过 Softmax 后的概率切片
+// target: 该样本的真实标签索引 (TargetLabel)
+func CrossEntropy(probs []float32, target int) float64 {
+	if target < 0 || target >= len(probs) {
+		return 10.0 // 越界容错
+	}
+	// 提取目标类别的概率
+	p := float64(probs[target])
+
+	// 关键：数值稳定性处理
+	// 如果概率极低接近 0，Log(0) 会导致负无穷，让程序崩溃
+	if p < 1e-10 {
+		p = 1e-10
+	}
+
+	// 公式: Loss = -ln(p)
+	return -math.Log(p)
+}
+
 // ArgMax 找到切片中最大值的索引 (Index of Maximum Value)。
 // 对应 Python: np.argmax(probs)
 // 用途: 将模型输出的概率数组转换为具体的类别标签 (Label)。
@@ -106,9 +126,9 @@ func MeanAndStd(data []float64) (mean float64, std float64) {
 	if len(data) == 0 {
 		return 0, 0
 	}
-	
+
 	n := float64(len(data))
-	
+
 	// 计算均值
 	var sum float64
 	for _, v := range data {
@@ -127,11 +147,11 @@ func MeanAndStd(data []float64) (mean float64, std float64) {
 		diff := v - mean
 		varianceSum += diff * diff
 	}
-	
+
 	// 自由度为 n-1
 	variance := varianceSum / (n - 1)
 	std = math.Sqrt(variance)
-	
+
 	return mean, std
 }
 
@@ -147,12 +167,12 @@ func CalibrateReference(dists [][]float64) (tauD float64, tauCV float64) {
 		if len(group) == 0 {
 			continue
 		}
-		
+
 		m, s := MeanAndStd(group)
-		
+
 		// 记录出该路人图的平均距离
 		dBarList = append(dBarList, m)
-		
+
 		// 计算并记录变异系数 CV = 标准差 / 均值
 		if m != 0 {
 			cvList = append(cvList, s/m)

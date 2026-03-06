@@ -1,168 +1,153 @@
 package main
 
 import (
-	"flag"
-	"fmt"
-	"log"
-	"os"
-	"time"
-
-	// 引入项目内部包
 	"Label-Only-MIA-Go/pkg/attack"
+	"Label-Only-MIA-Go/pkg/audit"
 	"Label-Only-MIA-Go/pkg/client"
 	"Label-Only-MIA-Go/pkg/core"
 	"Label-Only-MIA-Go/pkg/dataset"
+	"Label-Only-MIA-Go/pkg/mathutils"
 	"Label-Only-MIA-Go/pkg/worker"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"strings"
 )
 
 func main() {
-	// ========================================================================
-	// 1. 命令行参数配置
-	// ========================================================================
-	url := flag.String("url", "http://127.0.0.1:8080/predict", "Python模型服务的 API 地址")
-	dataPath := flag.String("data", "./data/test_batch.bin", "CIFAR-10 数据集路径")
-	limit := flag.Int("limit", 100, "攻击样本数量 (-1 代表全部)")
-	workers := flag.Int("workers", 20, "并发工人数 (Goroutines)")
+	fmt.Println("=====================================================")
+	fmt.Println("🛡️  LabelScan-Go: 高性能黑盒模型隐私审计工具 (最终版)")
+	fmt.Println("=====================================================")
 
-	// HSJA 算法参数配置
-	maxIter := flag.Int("max_iter", 50, "HSJA: 最大迭代次数")
-	numEvals := flag.Int("evals", 100, "HSJA: 梯度估算的查询次数")
-	initEvals := flag.Int("init_evals", 100, "HSJA: 初始化查询次数")
-
-	flag.Parse()
-
-	// 检查文件是否存在
-	if _, err := os.Stat(*dataPath); os.IsNotExist(err) {
-		log.Fatalf("❌ 错误: 数据文件未找到: %s", *dataPath)
-	}
-
-	fmt.Println("\n🛡️  Label-Only MIA (HSJA) 攻击系统启动")
-	fmt.Println("========================================")
-	fmt.Printf("📍 目标服务: %s\n", *url)
-	fmt.Printf("📂 数据来源: %s (Limit: %d)\n", *dataPath, *limit)
-	fmt.Printf("🚀 并发规模: %d Workers\n", *workers)
-	fmt.Println("========================================")
-
-	// ========================================================================
-	// 2. 组件初始化 (组装流水线)
-	// ========================================================================
-
-	// [B] 初始化 HTTP 模型客户端
-	fmt.Println("UNKNOWN... 正在连接模型服务...")
-	modelClient := client.NewClient(*url)
-
-	// [A] 初始化 HSJA 攻击算法
-	// 使用你提供的结构体配置
-	hsjaConfig := attack.HSJAConfig{
-		MaxIterations: *maxIter,
-		NumEvals:      *numEvals,
-		InitEvals:     *initEvals,
-	}
-	attacker := attack.NewHSJA(hsjaConfig)
-	fmt.Printf("🔧 攻击算法: HSJA (Iter=%d, Evals=%d)\n", *maxIter, *numEvals)
-
-	// [C] 加载 CIFAR-10 数据
-	fmt.Println("UNKNOWN... 正在加载数据...")
-	// 注意：IsMemberSet 设为 false，假设我们攻击的是测试集（非成员）
-	// 如果你跑的是训练集，这里应该设为 true
-	loader := &dataset.CifarLoader{IsMemberSet: false}
-
-	samples, err := loader.LoadBatch(*dataPath, *limit)
+	// ---------------------------------------------------------
+	// 1. 资产加载 (Member A 提供：影子模型两道闸门)
+	// ---------------------------------------------------------
+	configData, err := ioutil.ReadFile("shadow_config.json")
 	if err != nil {
-		log.Fatalf("❌ 数据加载失败: %v", err)
+		log.Fatal("❌ 错误：缺少 shadow_config.json。请 Member A 提供 tau_95 和 tau_opt")
 	}
-	fmt.Printf("✅ 数据加载完成: %d 个样本\n", len(samples))
+	var thresholds audit.AuditThresholds
+	if err := json.Unmarshal(configData, &thresholds); err != nil {
+		log.Fatalf("❌ 配置解析失败: %v", err)
+	}
 
-	// ========================================================================
-	// 3. 执行并发审计 (核心逻辑)
-	// ========================================================================
+	// ---------------------------------------------------------
+	// 2. 环境初始化 (B & C 的集成)
+	// ---------------------------------------------------------
+	targetAPI := "http://localhost:8000" // 目标模型 (黑盒)
+	shadowAPI := "http://localhost:8001" // 影子模型 (用于信号一)
 
-	startTime := time.Now()
+	targetModel := client.NewHTTPClient(targetAPI)
+	shadowModel := client.NewHTTPClient(shadowAPI)
 
-	// [Worker] 初始化审计员并开始干活
-	// 这里的 NewAuditor 和 RunAudit 正是你提供的 pool.go 里的逻辑
-	auditor := worker.NewAuditor(modelClient, attacker, *workers)
+	// 配置边界攻击器 (HSJA)
+	hsja := attack.NewHSJA(attack.HSJAConfig{
+		MaxQueries:    5000,
+		MaxIterations: 40,
+		NumEvals:      100,
+	})
 
-	// 开始跑！这里会阻塞直到所有图片处理完毕
-	results := auditor.RunAudit(samples)
+	// ---------------------------------------------------------
+	// 3. 现场定标 (Calibration)：算出当前模型的“水位线”
+	// ---------------------------------------------------------
+	fmt.Println("\n🔍 阶段一：正在抽取 10 张路人图进行现场定标...")
+	loader := &dataset.CifarLoader{}
+	strangers, _ := loader.GetRandomStrangers("data/test_batch.bin", 10)
 
-	duration := time.Since(startTime)
+	var refDists [][]float64
+	for i, s := range strangers {
+		fmt.Printf("   [定标中] 探测路人样本 #%d 的地理特征...\n", i+1)
 
-	// ========================================================================
-	// 4. 结果分析与报告
-	// ========================================================================
-	printReport(results, duration)
-}
+		// 为路人生成 10 个变体，测量 11 个点 (原图 + 变体)
+		variants := mathutils.GenerateVariants(s.Data, 0.001, 10)
+		points := append([]core.Image{s.Data}, variants...)
 
-// printReport 打印最终的统计结果
-func printReport(results []core.AttackResult, duration time.Duration) {
-	var successCount int
-	var totalQueries int
-	var totalDist float64
-	var validDistCount int
-
-	fmt.Println("\n📊 实时攻击日志:")
-	fmt.Println("----------------------------------------")
-
-	for _, res := range results {
-		status := "❌ 失败"
-		if res.IsSuccess {
-			status = "✅ 成功"
-			successCount++
-			// 只有成功的攻击才计算距离均值，或者你可以根据需求调整
-			totalDist += res.Distance
-			validDistCount++
+		var groupDists []float64
+		for _, img := range points {
+			tmp := core.Sample{Data: img, Label: s.Label}
+			res := hsja.Attack(tmp, targetModel)
+			groupDists = append(groupDists, res.Distance)
 		}
-		totalQueries += res.Queries
-
-		// 简单打印日志
-		fmt.Printf("ID: %-4d | %s | Label: %d->%d | Dist: %.4f | Q: %d\n",
-			res.SampleID, status, res.OriginalLabel, res.FinalLabel, res.Distance, res.Queries)
+		refDists = append(refDists, groupDists)
 	}
 
-	// 防止除零错误
-	avgDist := 0.0
-	if validDistCount > 0 {
-		avgDist = totalDist / float64(validDistCount)
-	}
+	// 调用 B 的统计函数锁定 TauD (距离上限) 和 TauCV (波动下限)
+	thresholds.TauD, thresholds.TauCV = mathutils.CalibrateReference(refDists)
+	fmt.Printf("📊 定标成功：距离红线 %.4f | 波动绿线 %.4f\n", thresholds.TauD, thresholds.TauCV)
 
-	successRate := float64(successCount) / float64(len(results)) * 100
-	avgTime := duration / time.Duration(len(results))
+	// ---------------------------------------------------------
+	// 4. 构造混合测试包 (50成员 + 50非成员，用于科学验证准确率)
+	// ---------------------------------------------------------
+	fmt.Println("\n📦 阶段二：构造混合测试包 (50名成员 + 50名路人)...")
 
-	fmt.Println("\n========================================")
-	fmt.Println("             🏁 最终审计报告             ")
-	fmt.Println("========================================")
-	fmt.Printf("⏱️  总耗时       : %s\n", duration)
-	fmt.Printf("⚡ 平均单张耗时 : %s\n", avgTime)
-	fmt.Printf("🎯 攻击成功率   : %.2f%% (%d/%d)\n", successRate, successCount, len(results))
-	fmt.Printf("📏 平均扰动距离 : %.4f (L2)\n", avgDist)
-	fmt.Printf("🔍 总查询次数   : %d\n", totalQueries)
-	fmt.Println("========================================")
-	// ==========================================
-	// 新增：模型健康度检查 (Quality Check)
-	// ==========================================
-	initialCorrectCount := 0
-	totalSamples := len(results) // 假设你的结果切片叫 results
+	// 加载 50 个确定练过的成员 (从 data_batch_1.bin)
+	loaderM := &dataset.CifarLoader{IsMemberSet: true}
+	members, _ := loaderM.LoadBatch("data/data_batch_1.bin", 50)
 
-	fmt.Println("\n🔎 [正在进行模型健康度审计]...")
-	for _, res := range results {
-		// 逻辑：如果攻击距离(Distance) > 0，说明模型一开始预测对了，
-		// 算法费了劲才把它改错，这是有效攻击。
-		// 如果 Distance == 0，说明模型一开始就错了，这是无效样本。
-		if res.Distance > 1e-4 { // 大于 0.0001
-			initialCorrectCount++
+	// 加载 50 个确定没见过的路人 (从 test_batch.bin)
+	loaderNM := &dataset.CifarLoader{IsMemberSet: false}
+	nonMembers, _ := loaderNM.LoadBatch("data/test_batch.bin", 50)
+
+	// 混合进入审计流水线
+	targetSamples := append(members, nonMembers...)
+
+	// ---------------------------------------------------------
+	// 5. 并发审计流水线 (Engine + Worker Pool)
+	// ---------------------------------------------------------
+	engine := audit.NewEngine(thresholds, shadowModel, targetModel, hsja)
+	pool := worker.NewAuditPool(engine, 20) // 开启 20 个审计窗口
+
+	fmt.Println("🚀 阶段三：全自动化审计流水线开启...")
+	finalReports := pool.RunAudit(targetSamples)
+
+	// ---------------------------------------------------------
+	// 6. 自动化对账与效能评估 (最后的战报)
+	// ---------------------------------------------------------
+	fmt.Println("\n=====================================================")
+	fmt.Println("📈 LabelScan-Go 最终审计效能战报")
+	fmt.Println("-----------------------------------------------------")
+
+	var tp, fp, tn, fn int // 统计学术语：真阳、假阳、真阴、假阴
+
+	for _, r := range finalReports {
+		// 逻辑：如果结论里带 🔴 或 🟡/🟠，则视为工具判定为“成员风险”
+		predIsMember := strings.Contains(r.Conclusion, "🔴") ||
+			strings.Contains(r.Conclusion, "🟡") ||
+			strings.Contains(r.Conclusion, "🟠")
+
+		if predIsMember == r.IsMemberTrue {
+			// 命中答案
+			if r.IsMemberTrue {
+				tp++
+			} else {
+				tn++
+			}
+		} else {
+			// 判定错误
+			if r.IsMemberTrue {
+				fn++
+			} else {
+				fp++
+			}
 		}
 	}
 
-	accuracy := float64(initialCorrectCount) / float64(totalSamples) * 100
-	fmt.Printf("✅ 有效攻击样本 (模型初始预测正确): %d / %d\n", initialCorrectCount, totalSamples)
-	fmt.Printf("📊 模型实际准确率 (Model Accuracy): %.2f%%\n", accuracy)
-
-	if accuracy < 50.0 {
-		fmt.Println("⚠️ [严重警告] 模型准确率极低！可能是权重加载错误或数据没对齐！")
-		fmt.Println("👉 此时的攻击速度没有参考价值，因为大多数时候算法直接跳过了。")
-	} else {
-		fmt.Println("👍 模型状态健康，攻击耗时数据真实有效。")
+	total := len(finalReports)
+	accuracy := float64(tp+tn) / float64(total) * 100
+	precision := 0.0
+	if (tp + fp) > 0 {
+		precision = float64(tp) / float64(tp+fp) * 100
 	}
-	// ==========================================
+	recall := 0.0
+	if (tp + fn) > 0 {
+		recall = float64(tp) / float64(tp+fn) * 100
+	}
+
+	fmt.Printf("   > 总审计样本数：   %d\n", total)
+	fmt.Printf("   > 审计准确率 (ACC): %.2f%%\n", accuracy)
+	fmt.Printf("   > 查准率 (Precision): %.2f%% (报红的样本中确为成员的比例)\n", precision)
+	fmt.Printf("   > 查全率 (Recall):    %.2f%% (成功抓获的真成员比例)\n", recall)
+	fmt.Println("=====================================================")
+	fmt.Println("💡 提示：详细 JSON 报告已生成在 output/ 目录下。")
 }
