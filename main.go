@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 )
 
@@ -60,9 +61,11 @@ func main() {
 		fmt.Printf("   [定标中] 探测路人样本 #%d 的地理特征...\n", i+1)
 
 		// 为路人生成 10 个变体，测量 11 个点 (原图 + 变体)
-		variants := mathutils.GenerateVariants(s.Data, 0.001, 10)
-		points := append([]core.Image{s.Data}, variants...)
-
+		rawVariants := mathutils.GenerateVariants(s.Data, 0.001, 10)
+		points := []core.Image{s.Data}
+		for _, v := range rawVariants {
+			points = append(points, core.Image(v))
+		}
 		var groupDists []float64
 		for _, img := range points {
 			tmp := core.Sample{Data: img, Label: s.Label}
@@ -149,5 +152,19 @@ func main() {
 	fmt.Printf("   > 查准率 (Precision): %.2f%% (报红的样本中确为成员的比例)\n", precision)
 	fmt.Printf("   > 查全率 (Recall):    %.2f%% (成功抓获的真成员比例)\n", recall)
 	fmt.Println("=====================================================")
-	fmt.Println("💡 提示：详细 JSON 报告已生成在 output/ 目录下。")
+	os.MkdirAll("output", os.ModePerm)
+
+	// 2. 把 finalReports 转换成漂亮的 JSON 格式
+	jsonData, err := json.MarshalIndent(finalReports, "", "  ")
+	if err != nil {
+		fmt.Printf("❌ 生成 JSON 失败: %v\n", err)
+	} else {
+		// 3. 写入文件
+		err = os.WriteFile("output/audit_report.json", jsonData, 0644)
+		if err != nil {
+			fmt.Printf("❌ 保存报告文件失败: %v\n", err)
+		} else {
+			fmt.Println("💡 提示：详细 JSON 报告已真实生成在 output/audit_report.json 目录下！")
+		}
+	}
 }
