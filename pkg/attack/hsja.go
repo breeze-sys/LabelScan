@@ -6,22 +6,19 @@ import (
 	"math"
 )
 
-// HSJAConfig 配置攻击参数
 type HSJAConfig struct {
-	MaxQueries    int     // 最大查询次数限制
-	MaxIterations int     // HSJA 的迭代轮数 (默认 50)
-	NumEvals      int     // 梯度估计的采样次数 (默认 100)
-	InitEvals     int     // 初始化时的采样次数 (默认 100)
-	ClipMin       float32 // 0.0
-	ClipMax       float32 // 1.0
+	MaxQueries    int
+	MaxIterations int
+	NumEvals      int
+	InitEvals     int
+	ClipMin       float32
+	ClipMax       float32
 }
 
-// HSJA 攻击器结构体
 type HSJA struct {
 	config HSJAConfig
 }
 
-// NewHSJA 创建攻击器
 func NewHSJA(cfg HSJAConfig) *HSJA {
 	if cfg.MaxQueries == 0 {
 		cfg.MaxQueries = 10000
@@ -41,13 +38,14 @@ func NewHSJA(cfg HSJAConfig) *HSJA {
 	return &HSJA{config: cfg}
 }
 
-// Attack 实现 core.Attacker 接口
+// Attack 实现升级后的 core.Attacker 接口
 func (atk *HSJA) Attack(sample core.Sample, model core.Model) core.AttackResult {
 	queries := 0
 
 	predictFunc := func(img []float32) int {
 		queries++
-		l, _ := model.Predict(img)
+		// 注意：将 []float32 转换为 core.Image 以匹配接口
+		l, _ := model.Predict(core.Image(img))
 		return l
 	}
 
@@ -58,8 +56,9 @@ func (atk *HSJA) Attack(sample core.Sample, model core.Model) core.AttackResult 
 	xAdv := atk.initialize(original, targetLabel, predictFunc)
 	if xAdv == nil {
 		return core.AttackResult{
-			SampleID: sample.ID, OriginalLabel: targetLabel, FinalLabel: targetLabel,
-			IsSuccess: false, Queries: queries, Distance: 0.0, IsMember: false,
+			SampleID: sample.ID,
+			Distance: 0.0,
+			Queries:  queries,
 		}
 	}
 
@@ -73,7 +72,7 @@ func (atk *HSJA) Attack(sample core.Sample, model core.Model) core.AttackResult 
 			break
 		}
 
-		// A. 梯度估计 (已使用 PredictBatch 优化)
+		// A. 梯度估计
 		delta := atk.computeDelta(float32(dist), i)
 		grad := atk.approximateGradient(xAdv, targetLabel, delta, model, &queries)
 
@@ -85,7 +84,7 @@ func (atk *HSJA) Attack(sample core.Sample, model core.Model) core.AttackResult 
 		// C. 投影与裁剪
 		xNew = mathutils.Clip(xNew, atk.config.ClipMin, atk.config.ClipMax)
 
-		// D. 再次二分查找，确保贴紧边界
+		// D. 再次二分查找
 		xNew = atk.binarySearch(original, xNew, targetLabel, predictFunc)
 
 		// E. 更新最优解
@@ -94,19 +93,13 @@ func (atk *HSJA) Attack(sample core.Sample, model core.Model) core.AttackResult 
 			dist = newDist
 			xAdv = xNew
 		}
-	} // <--- 循环在这里结束，包含了所有优化步骤
+	}
 
-	// 获取最终标签
-	finalLabel := predictFunc(xAdv)
-
+	// 最终只返回最核心的物理指标
 	return core.AttackResult{
-		SampleID:      sample.ID,
-		OriginalLabel: targetLabel,
-		FinalLabel:    finalLabel,
-		IsSuccess:     finalLabel != targetLabel,
-		Queries:       queries,
-		Distance:      dist,
-		IsMember:      sample.IsMember,
+		SampleID: sample.ID,
+		Distance: dist,
+		Queries:  queries,
 	}
 }
 
@@ -146,7 +139,7 @@ func (atk *HSJA) binarySearch(original, adversarial []float32, targetLabel int, 
 	return boundaryPoint
 }
 
-// approximateGradient 梯度估计 (批量优化版)
+// approximateGradient 梯度估计 (修正了类型转换问题)
 func (atk *HSJA) approximateGradient(sample []float32, label int, delta float32, model core.Model, queries *int) []float32 {
 	numEvals := atk.config.NumEvals
 	inputSize := len(sample)
@@ -163,10 +156,10 @@ func (atk *HSJA) approximateGradient(sample []float32, label int, delta float32,
 		posPoint := mathutils.VectorAdd(sample, perturbation)
 		posPoint = mathutils.Clip(posPoint, atk.config.ClipMin, atk.config.ClipMax)
 
-		batchImgs[j] = posPoint
+		// 显式转换为 core.Image
+		batchImgs[j] = core.Image(posPoint)
 	}
 
-	// 调用批量接口
 	preds, err := model.PredictBatch(batchImgs)
 	if err != nil {
 		return mathutils.NewVector(inputSize, 0)

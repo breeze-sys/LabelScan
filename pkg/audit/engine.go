@@ -13,11 +13,18 @@ const (
 	SignalGreen  = "GREEN"
 )
 
+// pkg/audit/engine.go
+
 type AuditThresholds struct {
-	Tau95  float64
-	TauOpt float64
-	TauD   float64
-	TauCV  float64
+	// 将 tau_95 改为 threshold
+	Tau95 float64 `json:"threshold"`
+
+	// 将 tau_opt 改为 mean_member_loss
+	TauOpt float64 `json:"mean_member_loss"`
+
+	// 这两个值是 main.go 现场算的，JSON 里没有也没关系
+	TauD  float64 `json:"tau_d"`
+	TauCV float64 `json:"tau_cv"`
 }
 
 type Engine struct {
@@ -38,10 +45,32 @@ func (e *Engine) AuditSample(sample core.Sample) core.AuditResult {
 		IsMemberTrue: sample.IsMember,
 	}
 
-	// 1. 方案一信号：影子模型行为指纹
+	// ---------------------------------------------------------
+	// 1. 预校验：探测目标模型对原图的初始反应
+	// ---------------------------------------------------------
+	tmpOrig := core.Sample{Data: sample.Data, Label: sample.Label}
+	origAtk := e.attacker.Attack(tmpOrig, e.target)
+
+	// 【核心修复 A】：如果模型预测错误，直接判绿并退出
+	if origAtk.Distance < 1e-6 {
+		res.ShadowLoss = 23.0
+		res.MeanDistance = 0
+		res.VolatilityCV = 99.0
+		res.Conclusion = "🟢 【 安全样本 - 非成员 (模型预测错误) 】"
+		return res
+	}
+
+	// ---------------------------------------------------------
+	// 2. 方案一信号：影子模型行为指纹 (迁移攻击)
+	// ---------------------------------------------------------
+	// 【核心修复 B】：必须先拿到目标模型的预测结果作为 TargetLabel
+	// 之前的代码里 TargetLabel 是空的，导致 CrossEntropy 永远算不对
+	targetPred, _ := e.target.Predict(sample.Data)
+	sample.TargetLabel = targetPred
+
 	logits, _ := e.shadow.PredictLogits(sample.Data)
-	probs := mathutils.Softmax(logits)                        // 调用 B 的 Softmax
-	loss := mathutils.CrossEntropy(probs, sample.TargetLabel) // 调用 B 需补全的函数
+	probs := mathutils.Softmax(logits)
+	loss := mathutils.CrossEntropy(probs, sample.TargetLabel)
 	res.ShadowLoss = loss
 
 	s1 := SignalGreen
@@ -51,13 +80,14 @@ func (e *Engine) AuditSample(sample core.Sample) core.AuditResult {
 		s1 = SignalYellow
 	}
 
-	// 2. 方案二信号：目标模型几何指纹
-	// 调用你 (Member C) 实现的变体生成
+	// ---------------------------------------------------------
+	// 3. 方案二信号：目标模型几何指纹 (边界攻击)
+	// ---------------------------------------------------------
 	variants := mathutils.GenerateVariants(sample.Data, 0.001, 10)
-	dists := e.probeAll(sample.Data, variants, sample.Label)
+	otherDists := e.probeAll(variants, sample.Label)
+	allDists := append([]float64{origAtk.Distance}, otherDists...)
 
-	// 调用 B 的统计函数
-	dBar, std := mathutils.MeanAndStd(dists)
+	dBar, std := mathutils.MeanAndStd(allDists)
 	res.MeanDistance = dBar
 	cv := 0.0
 	if dBar > 0 {
@@ -66,33 +96,31 @@ func (e *Engine) AuditSample(sample core.Sample) core.AuditResult {
 	res.VolatilityCV = cv
 
 	s2 := SignalGreen
+	// 【核心优化】：只要距离比红线远，且波动比绿线小
 	if dBar > e.thresholds.TauD && cv < e.thresholds.TauCV {
 		s2 = SignalRed
 	} else if dBar > e.thresholds.TauD || cv < e.thresholds.TauCV {
 		s2 = SignalYellow
 	}
 
-	// 3. 最终逻辑判定
 	res.Conclusion = e.fusionLogic(s1, s2)
 	return res
 }
 
-func (e *Engine) probeAll(orig core.Image, variants [][]float32, label int) []float64 {
-	all := append([][]float32{orig}, variants...)
-	dists := make([]float64, len(all))
-
+// 辅助函数微调：去掉原图合并，只跑变体
+func (e *Engine) probeAll(variants [][]float32, label int) []float64 {
+	dists := make([]float64, len(variants))
 	var wg sync.WaitGroup
-	for i, img := range all {
+	for i, img := range variants {
 		wg.Add(1)
 		go func(idx int, targetImg []float32) {
 			defer wg.Done()
 			tmp := core.Sample{Data: targetImg, Label: label}
-			// 11个HSJA同时冲击 A 的服务器
 			atkRes := e.attacker.Attack(tmp, e.target)
 			dists[idx] = atkRes.Distance
 		}(i, img)
 	}
-	wg.Wait() // 11个点全跑完，这个样本的审计才算结束
+	wg.Wait()
 	return dists
 }
 

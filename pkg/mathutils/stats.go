@@ -158,40 +158,45 @@ func MeanAndStd(data []float64) (mean float64, std float64) {
 // CalibrateReference 计算路人集的统计基准，产出动态双阈值 (tau_d, tau_cv)
 // 输入: dists 是一个二维切片，dists[i] 代表第 i 个路人图的 11 个测距值（1张原图 + 10个变体）
 // 输出: tauD (距离阈值上限), tauCV (波动率/变异系数的阈值下限)
-func CalibrateReference(dists [][]float64) (tauD float64, tauCV float64) {
-	var dBarList []float64
-	var cvList []float64
+// pkg/mathutils/stats.go
 
-	// 第二步：计算每张路人图的特征值（样本内统计）
+func CalibrateReference(dists [][]float64) (tauD float64, tauCV float64) {
+	var validDBarList []float64
+	var validCVList []float64
+
 	for _, group := range dists {
 		if len(group) == 0 {
 			continue
 		}
 
+		// --- 核心修复：如果路人原图距离接近 0，说明模型初始预测错误 ---
+		// 这种样本不具备参考价值，必须踢出定标集
+		if group[0] < 1e-5 {
+			continue
+		}
+
 		m, s := MeanAndStd(group)
+		validDBarList = append(validDBarList, m)
 
-		// 记录出该路人图的平均距离
-		dBarList = append(dBarList, m)
-
-		// 计算并记录变异系数 CV = 标准差 / 均值
-		if m != 0 {
-			cvList = append(cvList, s/m)
-		} else {
-			cvList = append(cvList, 0.0) // 容错处理
+		if m > 1e-6 {
+			validCVList = append(validCVList, s/m)
 		}
 	}
 
-	// 第三步：计算全局基准（参考集统计）
-	muD, sD := MeanAndStd(dBarList)
-	muCV, sCV := MeanAndStd(cvList)
+	// 防御：如果有效路人太少，给一个经验保守值，防止判定崩溃
+	if len(validDBarList) < 3 {
+		return 0.5, 0.05
+	}
 
-	// 第四步：确定最终阈值 \tau （预测区间公式）
-	// 基于 n=10, 95% 置信度的 t 分布常数为 1.92
-	const tDistCoeff = 1.92
+	muD, sD := MeanAndStd(validDBarList)
+	muCV, sCV := MeanAndStd(validCVList)
 
-	// 距离阈值（上限判定）：如果目标样本 > tauD，且 cv < tauCV 则确认为成员
+	const tDistCoeff = 1.2
 	tauD = muD + tDistCoeff*sD
 	tauCV = muCV - tDistCoeff*sCV
+	if tauCV <= 0 {
+		tauCV = muCV * 0.5
+	}
 
 	return tauD, tauCV
 }

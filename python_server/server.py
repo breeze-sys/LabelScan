@@ -22,7 +22,7 @@ DATASET_NAME = 'CIFAR10'
 
 # 【核心修改】：优先从环境变量读取路径，如果没有则使用默认值
 # 默认指向目标模型 (Target)，但启动影子服务时可以通过环境变量覆盖
-DEFAULT_PATH = 'results/CIFAR10/target/3000/best_checkpoint_ep.pth'
+DEFAULT_PATH = 'python_server/CIFAR10/target/3000/best_checkpoint_ep.pth'
 CHECKPOINT_PATH = os.getenv("MODEL_PATH", DEFAULT_PATH)
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -157,4 +157,10 @@ async def predict_batch(req: BatchPredictRequest):
 
 # 本地调试用
 if __name__ == "__main__":
-    uvicorn.run("server:app", host="0.0.0.0", port=8080, reload=False)
+    # 关键修改：从环境变量读取 PORT，如果没设置则默认用 8000
+    import os
+    port_str = os.getenv("PORT", "8000") 
+    port = int(port_str)
+    
+    print(f"🚀 服务即将启动在端口: {port}")
+    uvicorn.run("server:app", host="0.0.0.0", port=port, reload=False)

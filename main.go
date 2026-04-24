@@ -12,21 +12,20 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
 	"strings"
 )
 
 func main() {
 	fmt.Println("=====================================================")
-	fmt.Println("🛡️  LabelScan-Go: 高性能黑盒模型隐私审计工具 (最终版)")
+	fmt.Println("🛡️  LabelScan-Go: 高性能黑盒模型隐私审计工具 (诊断版)")
 	fmt.Println("=====================================================")
 
 	// ---------------------------------------------------------
-	// 1. 资产加载 (Member A 提供：影子模型两道闸门)
+	// 1. 资产加载 (从 JSON 读取迁移攻击阈值)
 	// ---------------------------------------------------------
 	configData, err := ioutil.ReadFile("shadow_config.json")
 	if err != nil {
-		log.Fatal("❌ 错误：缺少 shadow_config.json。请 Member A 提供 tau_95 和 tau_opt")
+		log.Fatal("❌ 错误：缺少 shadow_config.json")
 	}
 	var thresholds audit.AuditThresholds
 	if err := json.Unmarshal(configData, &thresholds); err != nil {
@@ -34,15 +33,14 @@ func main() {
 	}
 
 	// ---------------------------------------------------------
-	// 2. 环境初始化 (B & C 的集成)
+	// 2. 环境初始化
 	// ---------------------------------------------------------
-	targetAPI := "http://localhost:8000" // 目标模型 (黑盒)
-	shadowAPI := "http://localhost:8001" // 影子模型 (用于信号一)
+	targetAPI := "http://localhost:8000" // 确保路径包含 /predict
+	shadowAPI := "http://localhost:8001"
 
 	targetModel := client.NewHTTPClient(targetAPI)
 	shadowModel := client.NewHTTPClient(shadowAPI)
 
-	// 配置边界攻击器 (HSJA)
 	hsja := attack.NewHSJA(attack.HSJAConfig{
 		MaxQueries:    5000,
 		MaxIterations: 40,
@@ -50,22 +48,34 @@ func main() {
 	})
 
 	// ---------------------------------------------------------
-	// 3. 现场定标 (Calibration)：算出当前模型的“水位线”
+	// 3. 现场定标 (Calibration)：核心修复逻辑
 	// ---------------------------------------------------------
-	fmt.Println("\n🔍 阶段一：正在抽取 10 张路人图进行现场定标...")
+	fmt.Println("\n🔍 阶段一：正在进行现场定标 (寻找 10 个有效路人)...")
 	loader := &dataset.CifarLoader{}
-	strangers, _ := loader.GetRandomStrangers("data/test_batch.bin", 10)
+
+	// 【关键修改 1】：加载 100 张备选路人图，防止 10 张不够挑导致的死循环
+	candidates, _ := loader.GetRandomStrangers("data/cifar-10-batches-bin/test_batch.bin", 100)
 
 	var refDists [][]float64
-	for i, s := range strangers {
-		fmt.Printf("   [定标中] 探测路人样本 #%d 的地理特征...\n", i+1)
+	validStrangers := 0
 
-		// 为路人生成 10 个变体，测量 11 个点 (原图 + 变体)
-		rawVariants := mathutils.GenerateVariants(s.Data, 0.001, 10)
-		points := []core.Image{s.Data}
-		for _, v := range rawVariants {
-			points = append(points, core.Image(v))
+	for i := 0; i < len(candidates) && validStrangers < 10; i++ {
+		s := candidates[i]
+
+		// 预探测：模型必须能认对这张图 (Dist > 0)
+		tmpOrig := core.Sample{Data: s.Data, Label: s.Label}
+		resOrig := hsja.Attack(tmpOrig, targetModel)
+
+		if resOrig.Distance < 1e-5 {
+			fmt.Printf("   [跳过] 路人 #%d 预测错误 (Dist=0)，尝试下一个...\n", i+1)
+			continue
 		}
+
+		fmt.Printf("   [定标中] 正在探测有效路人 %d/10 的地理特征...\n", validStrangers+1)
+
+		// 生成变体并测距
+		variants := mathutils.GenerateVariants(s.Data, 0.001, 10)
+		points := append([][]float32{s.Data}, variants...)
 		var groupDists []float64
 		for _, img := range points {
 			tmp := core.Sample{Data: img, Label: s.Label}
@@ -73,61 +83,68 @@ func main() {
 			groupDists = append(groupDists, res.Distance)
 		}
 		refDists = append(refDists, groupDists)
+		validStrangers++
 	}
 
-	// 调用 B 的统计函数锁定 TauD (距离上限) 和 TauCV (波动下限)
+	if validStrangers < 5 {
+		log.Fatal("❌ 严重错误：无法找到足够的有效路人样本，请检查模型准确率或数据对齐！")
+	}
+
+	// 调用统计函数算出 TauD 和 TauCV
 	thresholds.TauD, thresholds.TauCV = mathutils.CalibrateReference(refDists)
-	fmt.Printf("📊 定标成功：距离红线 %.4f | 波动绿线 %.4f\n", thresholds.TauD, thresholds.TauCV)
+
+	// 【关键修改 2】：强制诊断打印
+	fmt.Println("\n--- 🕵️ 阈值诊断报告 (核心排查数据) ---")
+	fmt.Printf("👉 迁移红灯 (Tau95): %.4f (来自JSON)\n", thresholds.Tau95)
+	fmt.Printf("👉 迁移黄灯 (TauOpt): %.4f (来自JSON)\n", thresholds.TauOpt)
+	fmt.Printf("👉 距离红线 (TauD):   %.4f (正常应在 0.3-0.7)\n", thresholds.TauD)
+	fmt.Printf("👉 波动绿线 (TauCV):  %.4f (正常应在 0.01-0.1)\n", thresholds.TauCV)
+	if thresholds.TauD > 1.5 {
+		fmt.Println("⚠️  警告：TauD 过高，会导致严重漏报 (Recall低)！")
+	}
+	fmt.Println("-------------------------------------------\n")
 
 	// ---------------------------------------------------------
-	// 4. 构造混合测试包 (50成员 + 50非成员，用于科学验证准确率)
+	// 4. 构造混合测试包 (各拿 5 个，总计 10 个样本做快速诊断)
 	// ---------------------------------------------------------
-	fmt.Println("\n📦 阶段二：构造混合测试包 (50名成员 + 50名路人)...")
-
-	// 加载 50 个确定练过的成员 (从 data_batch_1.bin)
+	fmt.Println("📦 阶段二：构造混合测试包 (5 成员 + 5 路人)...")
 	loaderM := &dataset.CifarLoader{IsMemberSet: true}
-	members, _ := loaderM.LoadBatch("data/data_batch_1.bin", 50)
+	members, _ := loaderM.LoadBatch("data/cifar-10-batches-bin/data_batch_1.bin", 5)
 
-	// 加载 50 个确定没见过的路人 (从 test_batch.bin)
 	loaderNM := &dataset.CifarLoader{IsMemberSet: false}
-	nonMembers, _ := loaderNM.LoadBatch("data/test_batch.bin", 50)
+	nonMembers, _ := loaderNM.LoadBatch("data/cifar-10-batches-bin/test_batch.bin", 5)
 
-	// 混合进入审计流水线
 	targetSamples := append(members, nonMembers...)
 
 	// ---------------------------------------------------------
-	// 5. 并发审计流水线 (Engine + Worker Pool)
+	// 5. 并发审计流水线
 	// ---------------------------------------------------------
 	engine := audit.NewEngine(thresholds, shadowModel, targetModel, hsja)
-	pool := worker.NewAuditPool(engine, 20) // 开启 20 个审计窗口
+	pool := worker.NewAuditPool(engine, 20)
 
 	fmt.Println("🚀 阶段三：全自动化审计流水线开启...")
 	finalReports := pool.RunAudit(targetSamples)
 
 	// ---------------------------------------------------------
-	// 6. 自动化对账与效能评估 (最后的战报)
+	// 6. 战报评估
 	// ---------------------------------------------------------
 	fmt.Println("\n=====================================================")
 	fmt.Println("📈 LabelScan-Go 最终审计效能战报")
 	fmt.Println("-----------------------------------------------------")
 
-	var tp, fp, tn, fn int // 统计学术语：真阳、假阳、真阴、假阴
-
+	var tp, fp, tn, fn int
 	for _, r := range finalReports {
-		// 逻辑：如果结论里带 🔴 或 🟡/🟠，则视为工具判定为“成员风险”
 		predIsMember := strings.Contains(r.Conclusion, "🔴") ||
 			strings.Contains(r.Conclusion, "🟡") ||
 			strings.Contains(r.Conclusion, "🟠")
 
 		if predIsMember == r.IsMemberTrue {
-			// 命中答案
 			if r.IsMemberTrue {
 				tp++
 			} else {
 				tn++
 			}
 		} else {
-			// 判定错误
 			if r.IsMemberTrue {
 				fn++
 			} else {
@@ -149,22 +166,7 @@ func main() {
 
 	fmt.Printf("   > 总审计样本数：   %d\n", total)
 	fmt.Printf("   > 审计准确率 (ACC): %.2f%%\n", accuracy)
-	fmt.Printf("   > 查准率 (Precision): %.2f%% (报红的样本中确为成员的比例)\n", precision)
-	fmt.Printf("   > 查全率 (Recall):    %.2f%% (成功抓获的真成员比例)\n", recall)
+	fmt.Printf("   > 查准率 (Precision): %.2f%%\n", precision)
+	fmt.Printf("   > 查全率 (Recall):    %.2f%%\n", recall)
 	fmt.Println("=====================================================")
-	os.MkdirAll("output", os.ModePerm)
-
-	// 2. 把 finalReports 转换成漂亮的 JSON 格式
-	jsonData, err := json.MarshalIndent(finalReports, "", "  ")
-	if err != nil {
-		fmt.Printf("❌ 生成 JSON 失败: %v\n", err)
-	} else {
-		// 3. 写入文件
-		err = os.WriteFile("output/audit_report.json", jsonData, 0644)
-		if err != nil {
-			fmt.Printf("❌ 保存报告文件失败: %v\n", err)
-		} else {
-			fmt.Println("💡 提示：详细 JSON 报告已真实生成在 output/audit_report.json 目录下！")
-		}
-	}
 }
