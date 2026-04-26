@@ -22,7 +22,7 @@ DATASET_NAME = 'CIFAR10'
 
 # 【核心修改】：优先从环境变量读取路径，如果没有则使用默认值
 # 默认指向目标模型 (Target)，但启动影子服务时可以通过环境变量覆盖
-DEFAULT_PATH = 'python_server/CIFAR10/target/3000/best_checkpoint_ep.pth'
+DEFAULT_PATH = 'python_server/CIFAR10/shadow_json_aligned/best_checkpoint_ep.pth'
 CHECKPOINT_PATH = os.getenv("MODEL_PATH", DEFAULT_PATH)
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
