@@ -1,6 +1,6 @@
 # ==========================================
-# Label-Only-MIA 后端服务接口 (最终部署版)
-# 对应任务：双机部署支持、API对齐、Batch加速
+# LabelScan-Go 模型服务接口
+# 支持 Target/Shadow 双服务部署、API 对齐和批量推理
 # ==========================================
 
 import torch
@@ -20,8 +20,8 @@ from classifier import CNN
 MODEL_ARCH = 'CNN7'       
 DATASET_NAME = 'CIFAR10' 
 
-# 【核心修改】：优先从环境变量读取路径，如果没有则使用默认值
-# 默认指向目标模型 (Target)，但启动影子服务时可以通过环境变量覆盖
+# 优先从环境变量读取模型路径；未设置时默认加载当前对齐版影子模型。
+# 启动 Target 服务时由 Docker Compose 通过 MODEL_PATH 显式覆盖。
 DEFAULT_PATH = 'python_server/CIFAR10/shadow_json_aligned/best_checkpoint_ep.pth'
 CHECKPOINT_PATH = os.getenv("MODEL_PATH", DEFAULT_PATH)
 
@@ -92,7 +92,7 @@ async def lifespan(app: FastAPI):
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
 
-app = FastAPI(title="MIA Attack Oracle", lifespan=lifespan)
+app = FastAPI(title="LabelScan-Go Oracle", lifespan=lifespan)
 
 # --- 协议定义 (对齐 Go 的 types.go) ---
 class PredictRequest(BaseModel):

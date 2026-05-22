@@ -158,8 +158,12 @@ func envOrDefault(key, fallback string) string {
 }
 
 func applyPreset(cfg *runConfig, preset string) error {
-	cfg.Preset = preset
-	switch preset {
+	normalized := strings.ToLower(strings.TrimSpace(preset))
+	if normalized == "" {
+		normalized = "standard"
+	}
+	cfg.Preset = normalized
+	switch normalized {
 	case "smoke":
 		cfg.CalibrationCandidateCount = 10
 		cfg.CalibrationTargetCount = 1
@@ -171,7 +175,8 @@ func applyPreset(cfg *runConfig, preset string) error {
 		cfg.MaxIterations = 8
 		cfg.NumEvals = 30
 	case "standard":
-	case "full":
+	case "extended", "full":
+		cfg.Preset = "extended"
 		cfg.CalibrationCandidateCount = 200
 		cfg.CalibrationTargetCount = 20
 		cfg.MinValidStrangers = 10
@@ -179,7 +184,7 @@ func applyPreset(cfg *runConfig, preset string) error {
 		cfg.NonMemberSampleCount = 100
 	case "custom":
 	default:
-		return fmt.Errorf("unknown preset %q, choose smoke / standard / full / custom", preset)
+		return fmt.Errorf("unknown preset %q, choose smoke / standard / extended / custom", preset)
 	}
 	return nil
 }
@@ -201,7 +206,7 @@ func loadConfigFromFlags() (runConfig, cliOptions) {
 	serve := flag.Bool("serve", false, "start local Web audit console")
 	addr := flag.String("addr", envOrDefault("LABELSCAN_ADDR", ":8080"), "Web console listen address")
 	auditMode := flag.String("audit-mode", cfg.AuditMode, "audit mode: full / boundary-only")
-	preset := flag.String("preset", cfg.Preset, "audit preset: smoke / standard / full / custom")
+	preset := flag.String("preset", cfg.Preset, "audit preset: smoke / standard / extended / custom")
 	targetAPI := flag.String("target-api", cfg.TargetAPI, "target model API")
 	shadowAPI := flag.String("shadow-api", cfg.ShadowAPI, "shadow model API")
 	shadowConfig := flag.String("shadow-config", cfg.ShadowConfigPath, "shadow threshold config")
@@ -631,7 +636,7 @@ func printSummary(report auditReport) {
 	fmt.Println("\n[4/4] Audit complete")
 	fmt.Println("-----------------------------------------------------")
 	fmt.Printf("Samples: %d (%d member / %d non-member)\n", report.Metrics.Total, report.Metrics.MemberSamples, report.Metrics.NonMembers)
-	fmt.Printf("Risk samples: %d\n", report.Metrics.PredictedRisk)
+	fmt.Printf("High-risk samples: %d\n", report.Metrics.PredictedRisk)
 	fmt.Printf("Accuracy: %.2f%%\n", report.Metrics.Accuracy*100)
 	fmt.Printf("Precision: %.2f%%\n", report.Metrics.Precision*100)
 	fmt.Printf("Recall: %.2f%%\n", report.Metrics.Recall*100)
@@ -924,7 +929,7 @@ const webConsoleTemplate = `<!doctype html>
         <select id="preset">
           <option value="smoke">smoke：快速自检</option>
           <option value="standard">standard：常规评估</option>
-          <option value="full">full：扩展评估</option>
+          <option value="extended">extended：扩展评估</option>
           <option value="custom">custom：自定义</option>
         </select>
         <label>审计模式</label>
