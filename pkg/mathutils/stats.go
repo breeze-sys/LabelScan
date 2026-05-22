@@ -191,8 +191,17 @@ func CalibrateReference(dists [][]float64) (tauD float64, tauCV float64) {
 	muD, sD := MeanAndStd(validDBarList)
 	muCV, sCV := MeanAndStd(validCVList)
 
-	const tDistCoeff = 1.2
+	// 【极限微调】：把 1.2 彻底改为 0.0！
+	// 让阈值 (TauD) 直接等于路人的平均距离 (muD)，放弃所有的保守余量
+	const tDistCoeff = 0.0
 	tauD = muD + tDistCoeff*sD
+
+	// 【极其重要的防爆锁】：截图里少了这三行，必须加上！
+	// 防止再次出现挡住大批成员的高墙
+	if tauD > muD*1.1 {
+		tauD = muD * 1.1
+	}
+
 	tauCV = muCV - tDistCoeff*sCV
 	if tauCV <= 0 {
 		tauCV = muCV * 0.5

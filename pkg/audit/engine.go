@@ -51,7 +51,7 @@ func (e *Engine) AuditSample(sample core.Sample) core.AuditResult {
 	tmpOrig := core.Sample{Data: sample.Data, Label: sample.Label}
 	origAtk := e.attacker.Attack(tmpOrig, e.target)
 
-	// 【核心修复 A】：如果模型预测错误，直接判绿并退出
+	// 如果模型连原图都预测错了，直接判定为安全，省去后续所有计算
 	if origAtk.Distance < 1e-6 {
 		res.ShadowLoss = 23.0
 		res.MeanDistance = 0
@@ -61,27 +61,34 @@ func (e *Engine) AuditSample(sample core.Sample) core.AuditResult {
 	}
 
 	// ---------------------------------------------------------
-	// 2. 方案一信号：影子模型行为指纹 (迁移攻击)
+	// 2. 方案一信号：行为指纹 (影子模型判定)
 	// ---------------------------------------------------------
-	// 【核心修复 B】：必须先拿到目标模型的预测结果作为 TargetLabel
-	// 之前的代码里 TargetLabel 是空的，导致 CrossEntropy 永远算不对
+	// 获取目标模型当前的真实预测，作为影子模型对比的基准
 	targetPred, _ := e.target.Predict(sample.Data)
 	sample.TargetLabel = targetPred
 
 	logits, _ := e.shadow.PredictLogits(sample.Data)
 	probs := mathutils.Softmax(logits)
-	loss := mathutils.CrossEntropy(probs, sample.TargetLabel)
+	loss := mathutils.CrossEntropy(probs, sample.Label)
 	res.ShadowLoss = loss
 
+	// 【核心逻辑修正】：自动识别红灯和黄灯的水位
+	// 影子模型 Loss 越小越危险。所以 Tau95 和 TauOpt 中更小的那个才是真正的“红灯线”
+	redLine := e.thresholds.Tau95
+	yellowLine := e.thresholds.TauOpt
+	if redLine > yellowLine {
+		redLine, yellowLine = yellowLine, redLine // 交换，确保 redLine 是最小最严的
+	}
+
 	s1 := SignalGreen
-	if loss < e.thresholds.Tau95 {
-		s1 = SignalRed
-	} else if loss < e.thresholds.TauOpt {
-		s1 = SignalYellow
+	if loss < redLine {
+		s1 = SignalRed // 极度像成员
+	} else if loss < yellowLine {
+		s1 = SignalYellow // 比较像成员
 	}
 
 	// ---------------------------------------------------------
-	// 3. 方案二信号：目标模型几何指纹 (边界攻击)
+	// 3. 方案二信号：几何指纹 (边界稳定性判定)
 	// ---------------------------------------------------------
 	variants := mathutils.GenerateVariants(sample.Data, 0.001, 10)
 	otherDists := e.probeAll(variants, sample.Label)
@@ -89,20 +96,26 @@ func (e *Engine) AuditSample(sample core.Sample) core.AuditResult {
 
 	dBar, std := mathutils.MeanAndStd(allDists)
 	res.MeanDistance = dBar
-	cv := 0.0
+	cv := 99.0 // 默认不平稳
 	if dBar > 0 {
 		cv = std / dBar
 	}
 	res.VolatilityCV = cv
 
+	// 1. AuditSample 函数的结尾：
 	s2 := SignalGreen
-	// 【核心优化】：只要距离比红线远，且波动比绿线小
-	if dBar > e.thresholds.TauD && cv < e.thresholds.TauCV {
+	isFar := dBar > e.thresholds.TauD // 距离比路人远
+
+	// 【暴力拆解 AND 死亡之锁】：只要远，就是实锤成员！
+	if isFar {
 		s2 = SignalRed
-	} else if dBar > e.thresholds.TauD || cv < e.thresholds.TauCV {
+	} else if cv < e.thresholds.TauCV {
 		s2 = SignalYellow
 	}
 
+	// ---------------------------------------------------------
+	// 4. 决策融合
+	// ---------------------------------------------------------
 	res.Conclusion = e.fusionLogic(s1, s2)
 	return res
 }
@@ -125,14 +138,21 @@ func (e *Engine) probeAll(variants [][]float32, label int) []float64 {
 }
 
 func (e *Engine) fusionLogic(s1, s2 string) string {
-	if s1 == SignalRed && s2 == SignalRed {
-		return "🔴 【 确认为模型成员 】"
+	if s2 == SignalRed && s1 == SignalRed {
+		return "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
 	}
-	if s1 == SignalRed || s2 == SignalRed || (s1 == SignalYellow && s2 == SignalYellow) {
-		return "🟡 【 风险极高 - 高度可疑 】"
+	if s2 == SignalRed && s1 == SignalYellow {
+		return "🔴 【 确认为模型成员 - 边界突破 & 行为特征吻合 】"
 	}
-	if s1 == SignalYellow || s2 == SignalYellow {
-		return "🟠 【 中度风险 - 疑似成员 】"
+	if s1 == SignalRed && s2 == SignalYellow {
+		return "🔴 【 确认为模型成员 - 行为实锤 & 局部特征稳定 】"
+	}
+	// 核心降级：距离虽远，但真实Loss极大(S1没见过)，降级为橙色
+	if s2 == SignalRed && s1 == SignalGreen {
+		return "🟠 【 中度风险 - 异常距离(目标模型神经质)，但行为不符 】"
+	}
+	if s1 == SignalRed || s2 == SignalYellow || s1 == SignalYellow {
+		return "🟡 【 风险较高 - 单一维度疑似 】"
 	}
 	return "🟢 【 安全样本 - 非成员 】"
 }

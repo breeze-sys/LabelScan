@@ -13,7 +13,7 @@ func main() {
 
 	// 1. 初始化客户端 (连接刚才启动的 8000 端口目标模型)
 	// 注意：PredictBatch 会自动拼接成 http://localhost:8000/predict_batch
-	apiURL := "http://localhost:8000/predict"
+	apiURL := "http://localhost:8000"
 	httpClient := client.NewHTTPClient(apiURL)
 
 	// 2. 加载数据

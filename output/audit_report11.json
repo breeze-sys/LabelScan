@@ -1,14 +1,5 @@
 [
   {
-    "SampleID": 15190,
-    "Label": 9,
-    "IsMemberTrue": true,
-    "ShadowLoss": 23,
-    "MeanDistance": 0,
-    "VolatilityCV": 99,
-    "Conclusion": "🟢 【 安全样本 - 非成员 (模型预测错误) 】"
-  },
-  {
     "SampleID": 2206,
     "Label": 9,
     "IsMemberTrue": true,
@@ -18,66 +9,21 @@
     "Conclusion": "🟢 【 安全样本 - 非成员 (模型预测错误) 】"
   },
   {
-    "SampleID": 9047,
-    "Label": 2,
+    "SampleID": 15190,
+    "Label": 9,
     "IsMemberTrue": true,
-    "ShadowLoss": 0.00013155610414409462,
-    "MeanDistance": 0.3294010200248901,
-    "VolatilityCV": 0.006803344175999311,
-    "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
+    "ShadowLoss": 23,
+    "MeanDistance": 0,
+    "VolatilityCV": 99,
+    "Conclusion": "🟢 【 安全样本 - 非成员 (模型预测错误) 】"
   },
   {
     "SampleID": 26247,
     "Label": 6,
     "IsMemberTrue": true,
     "ShadowLoss": 1.1920929665620916e-7,
-    "MeanDistance": 0.6310709385394788,
-    "VolatilityCV": 0.36305541848169315,
-    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
-  },
-  {
-    "SampleID": 34590,
-    "Label": 3,
-    "IsMemberTrue": true,
-    "ShadowLoss": 15.469488167731768,
-    "MeanDistance": 0.9173268985044151,
-    "VolatilityCV": 0.0176336434451605,
-    "Conclusion": "🔴 【 确认为模型成员 - 边界突破 \u0026 行为特征吻合 】"
-  },
-  {
-    "SampleID": 2600,
-    "Label": 1,
-    "IsMemberTrue": true,
-    "ShadowLoss": -0,
-    "MeanDistance": 0.6449733742272488,
-    "VolatilityCV": 0.01830967789172702,
-    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
-  },
-  {
-    "SampleID": 43027,
-    "Label": 6,
-    "IsMemberTrue": true,
-    "ShadowLoss": -0,
-    "MeanDistance": 1.1339840971837893,
-    "VolatilityCV": 0.03806214334051754,
-    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
-  },
-  {
-    "SampleID": 26370,
-    "Label": 5,
-    "IsMemberTrue": true,
-    "ShadowLoss": -0,
-    "MeanDistance": 0.880693266048543,
-    "VolatilityCV": 0.05540282475371351,
-    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
-  },
-  {
-    "SampleID": 1281,
-    "Label": 3,
-    "IsMemberTrue": true,
-    "ShadowLoss": 1.6987688968742443,
-    "MeanDistance": 0.9844952845300342,
-    "VolatilityCV": 0.015607736973249502,
+    "MeanDistance": 0.7688743274899573,
+    "VolatilityCV": 0.2715531091848534,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
@@ -85,26 +31,26 @@
     "Label": 8,
     "IsMemberTrue": true,
     "ShadowLoss": 0.000005483642354475191,
-    "MeanDistance": 0.7347216588827862,
-    "VolatilityCV": 0.02072656642263802,
+    "MeanDistance": 0.7433584210397115,
+    "VolatilityCV": 0.021819433799661517,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
+  },
+  {
+    "SampleID": 9047,
+    "Label": 2,
+    "IsMemberTrue": true,
+    "ShadowLoss": 0.00013155610414409462,
+    "MeanDistance": 0.329580456288106,
+    "VolatilityCV": 0.021316831405588932,
+    "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
   },
   {
     "SampleID": 29433,
     "Label": 2,
     "IsMemberTrue": true,
     "ShadowLoss": 0.00008172130708211713,
-    "MeanDistance": 0.7156543583500103,
-    "VolatilityCV": 0.156065294820182,
-    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
-  },
-  {
-    "SampleID": 25816,
-    "Label": 0,
-    "IsMemberTrue": true,
-    "ShadowLoss": -0,
-    "MeanDistance": 1.3930085703929982,
-    "VolatilityCV": 0.0684597430604819,
+    "MeanDistance": 0.682961043071722,
+    "VolatilityCV": 0.1632495766887493,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
@@ -112,44 +58,98 @@
     "Label": 7,
     "IsMemberTrue": true,
     "ShadowLoss": 14.810527181311487,
-    "MeanDistance": 0.8677458733671789,
-    "VolatilityCV": 0.015464707568222552,
+    "MeanDistance": 0.8359879992072426,
+    "VolatilityCV": 0.11107960613981036,
     "Conclusion": "🔴 【 确认为模型成员 - 边界突破 \u0026 行为特征吻合 】"
-  },
-  {
-    "SampleID": 36256,
-    "Label": 7,
-    "IsMemberTrue": true,
-    "ShadowLoss": 0.000045360163430730584,
-    "MeanDistance": 0.7897729555781491,
-    "VolatilityCV": 0.020927735977522264,
-    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
-  },
-  {
-    "SampleID": 16668,
-    "Label": 6,
-    "IsMemberTrue": true,
-    "ShadowLoss": -0,
-    "MeanDistance": 0.5083722922576186,
-    "VolatilityCV": 0.09625308075128022,
-    "Conclusion": "🟡 【 风险较高 - 单一维度疑似 】"
   },
   {
     "SampleID": 34217,
     "Label": 4,
     "IsMemberTrue": true,
     "ShadowLoss": 0.009185108740478702,
-    "MeanDistance": 0.6008251692065346,
-    "VolatilityCV": 0.0240577967947144,
+    "MeanDistance": 0.5959212321113146,
+    "VolatilityCV": 0.010798315742519524,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
-    "SampleID": 39950,
+    "SampleID": 43027,
+    "Label": 6,
+    "IsMemberTrue": true,
+    "ShadowLoss": -0,
+    "MeanDistance": 1.1244648676764901,
+    "VolatilityCV": 0.03003335354961496,
+    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
+  },
+  {
+    "SampleID": 1281,
     "Label": 3,
     "IsMemberTrue": true,
-    "ShadowLoss": 0.04187279018774673,
-    "MeanDistance": 0.7881230811398768,
-    "VolatilityCV": 0.011097876377799187,
+    "ShadowLoss": 1.6987688968742443,
+    "MeanDistance": 0.9818760290596257,
+    "VolatilityCV": 0.021129795034006235,
+    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
+  },
+  {
+    "SampleID": 2600,
+    "Label": 1,
+    "IsMemberTrue": true,
+    "ShadowLoss": -0,
+    "MeanDistance": 0.5821112271638926,
+    "VolatilityCV": 0.1752697763397076,
+    "Conclusion": "🟡 【 风险较高 - 单一维度疑似 】"
+  },
+  {
+    "SampleID": 11606,
+    "Label": 2,
+    "IsMemberTrue": true,
+    "ShadowLoss": 0.00007576037325412786,
+    "MeanDistance": 0.5175344846731575,
+    "VolatilityCV": 0.013390997000401526,
+    "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
+  },
+  {
+    "SampleID": 25816,
+    "Label": 0,
+    "IsMemberTrue": true,
+    "ShadowLoss": -0,
+    "MeanDistance": 1.3997065477141235,
+    "VolatilityCV": 0.07194225427446471,
+    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
+  },
+  {
+    "SampleID": 36256,
+    "Label": 7,
+    "IsMemberTrue": true,
+    "ShadowLoss": 0.000045360163430730584,
+    "MeanDistance": 0.7858446188696828,
+    "VolatilityCV": 0.037797400219928556,
+    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
+  },
+  {
+    "SampleID": 34590,
+    "Label": 3,
+    "IsMemberTrue": true,
+    "ShadowLoss": 15.469488167731768,
+    "MeanDistance": 0.9206093489138062,
+    "VolatilityCV": 0.016100767253384798,
+    "Conclusion": "🔴 【 确认为模型成员 - 边界突破 \u0026 行为特征吻合 】"
+  },
+  {
+    "SampleID": 3624,
+    "Label": 8,
+    "IsMemberTrue": true,
+    "ShadowLoss": 0.01103133375147014,
+    "MeanDistance": 0.7136006483735424,
+    "VolatilityCV": 0.06556476009297582,
+    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
+  },
+  {
+    "SampleID": 26370,
+    "Label": 5,
+    "IsMemberTrue": true,
+    "ShadowLoss": -0,
+    "MeanDistance": 0.8824001402542604,
+    "VolatilityCV": 0.04998584242434884,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
@@ -157,27 +157,27 @@
     "Label": 5,
     "IsMemberTrue": true,
     "ShadowLoss": 0.000002026559975834562,
-    "MeanDistance": 0.5814623564088781,
-    "VolatilityCV": 0.02104734279524772,
-    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
-  },
-  {
-    "SampleID": 11606,
-    "Label": 2,
-    "IsMemberTrue": true,
-    "ShadowLoss": 0.00007576037325412786,
-    "MeanDistance": 0.5204856706266813,
-    "VolatilityCV": 0.01714904327508998,
+    "MeanDistance": 0.5782234444612295,
+    "VolatilityCV": 0.01764545443833952,
     "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
   },
   {
-    "SampleID": 3624,
-    "Label": 8,
+    "SampleID": 39950,
+    "Label": 3,
     "IsMemberTrue": true,
-    "ShadowLoss": 0.01103133375147014,
-    "MeanDistance": 0.7311924970841517,
-    "VolatilityCV": 0.031463627124648286,
+    "ShadowLoss": 0.04187279018774673,
+    "MeanDistance": 0.7874030908469833,
+    "VolatilityCV": 0.017804048642111946,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
+  },
+  {
+    "SampleID": 16668,
+    "Label": 6,
+    "IsMemberTrue": true,
+    "ShadowLoss": -0,
+    "MeanDistance": 0.5031011415325932,
+    "VolatilityCV": 0.05595472874654723,
+    "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
   },
   {
     "SampleID": 40312,
@@ -189,30 +189,12 @@
     "Conclusion": "🟢 【 安全样本 - 非成员 (模型预测错误) 】"
   },
   {
-    "SampleID": 48140,
-    "Label": 9,
-    "IsMemberTrue": true,
-    "ShadowLoss": 23,
-    "MeanDistance": 0,
-    "VolatilityCV": 99,
-    "Conclusion": "🟢 【 安全样本 - 非成员 (模型预测错误) 】"
-  },
-  {
-    "SampleID": 26652,
-    "Label": 1,
-    "IsMemberTrue": true,
-    "ShadowLoss": -0,
-    "MeanDistance": 0.7733982821955862,
-    "VolatilityCV": 0.016079570218078838,
-    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
-  },
-  {
     "SampleID": 6756,
     "Label": 8,
     "IsMemberTrue": true,
     "ShadowLoss": 1.7881395031338534e-7,
-    "MeanDistance": 1.224133562139597,
-    "VolatilityCV": 0.0996604256636748,
+    "MeanDistance": 1.2320843788960685,
+    "VolatilityCV": 0.10098230862289756,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
@@ -234,30 +216,30 @@
     "Conclusion": "🟢 【 安全样本 - 非成员 (模型预测错误) 】"
   },
   {
+    "SampleID": 26652,
+    "Label": 1,
+    "IsMemberTrue": true,
+    "ShadowLoss": -0,
+    "MeanDistance": 0.7753905680943834,
+    "VolatilityCV": 0.01581458514067044,
+    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
+  },
+  {
+    "SampleID": 48140,
+    "Label": 9,
+    "IsMemberTrue": true,
+    "ShadowLoss": 0.031144743434451495,
+    "MeanDistance": 0.033764822390877726,
+    "VolatilityCV": 3.3166247903554003,
+    "Conclusion": "🟡 【 风险较高 - 单一维度疑似 】"
+  },
+  {
     "SampleID": 3991,
     "Label": 6,
     "IsMemberTrue": true,
     "ShadowLoss": 0.01098215806493209,
-    "MeanDistance": 0.6969847618613462,
-    "VolatilityCV": 0.011838795073374929,
-    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
-  },
-  {
-    "SampleID": 18783,
-    "Label": 8,
-    "IsMemberTrue": true,
-    "ShadowLoss": -0,
-    "MeanDistance": 0.8760001685259445,
-    "VolatilityCV": 0.022292071426228417,
-    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
-  },
-  {
-    "SampleID": 24580,
-    "Label": 1,
-    "IsMemberTrue": true,
-    "ShadowLoss": -0,
-    "MeanDistance": 0.9555338797706452,
-    "VolatilityCV": 0.015999373176793823,
+    "MeanDistance": 0.702622217980684,
+    "VolatilityCV": 0.020073872831197253,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
@@ -265,26 +247,17 @@
     "Label": 1,
     "IsMemberTrue": true,
     "ShadowLoss": -0,
-    "MeanDistance": 0.9954807951624528,
-    "VolatilityCV": 0.014807867287679724,
+    "MeanDistance": 0.9662158681201455,
+    "VolatilityCV": 0.07214229204931205,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
-    "SampleID": 23784,
-    "Label": 7,
-    "IsMemberTrue": true,
-    "ShadowLoss": 0.000018477610590366218,
-    "MeanDistance": 0.425234778786092,
-    "VolatilityCV": 0.019364630414309494,
-    "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
-  },
-  {
-    "SampleID": 766,
-    "Label": 8,
+    "SampleID": 24580,
+    "Label": 1,
     "IsMemberTrue": true,
     "ShadowLoss": -0,
-    "MeanDistance": 0.6792855387729783,
-    "VolatilityCV": 0.11876180995633025,
+    "MeanDistance": 0.9507558234300144,
+    "VolatilityCV": 0.011255664331175454,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
@@ -292,17 +265,26 @@
     "Label": 2,
     "IsMemberTrue": true,
     "ShadowLoss": 0.07976753599064766,
-    "MeanDistance": 0.33438459687683136,
-    "VolatilityCV": 0.014822878794264149,
+    "MeanDistance": 0.3332961667493524,
+    "VolatilityCV": 0.01428460915331115,
     "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
   },
   {
-    "SampleID": 11314,
-    "Label": 5,
+    "SampleID": 23784,
+    "Label": 7,
+    "IsMemberTrue": true,
+    "ShadowLoss": 0.000018477610590366218,
+    "MeanDistance": 0.4247621530645874,
+    "VolatilityCV": 0.011120179000673835,
+    "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
+  },
+  {
+    "SampleID": 18783,
+    "Label": 8,
     "IsMemberTrue": true,
     "ShadowLoss": -0,
-    "MeanDistance": 0.6995403262864847,
-    "VolatilityCV": 0.18180403019720434,
+    "MeanDistance": 0.8707737620602739,
+    "VolatilityCV": 0.01563109129894357,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
@@ -310,8 +292,8 @@
     "Label": 6,
     "IsMemberTrue": true,
     "ShadowLoss": -0,
-    "MeanDistance": 0.8389265729097226,
-    "VolatilityCV": 0.016252624101351216,
+    "MeanDistance": 0.8189862224955092,
+    "VolatilityCV": 0.06291822717290761,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
@@ -319,26 +301,26 @@
     "Label": 7,
     "IsMemberTrue": true,
     "ShadowLoss": -0,
-    "MeanDistance": 0.8995314614282944,
-    "VolatilityCV": 0.05847204841100977,
+    "MeanDistance": 0.9387238091990251,
+    "VolatilityCV": 0.12094530768774345,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
-    "SampleID": 25573,
+    "SampleID": 766,
     "Label": 8,
     "IsMemberTrue": true,
-    "ShadowLoss": 5.364419468634711e-7,
-    "MeanDistance": 0.4968099570974702,
-    "VolatilityCV": 0.022724719448736004,
-    "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
+    "ShadowLoss": -0,
+    "MeanDistance": 0.7188888485876336,
+    "VolatilityCV": 0.16363687973010568,
+    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
-    "SampleID": 10298,
-    "Label": 1,
+    "SampleID": 11314,
+    "Label": 5,
     "IsMemberTrue": true,
     "ShadowLoss": -0,
-    "MeanDistance": 1.262155017040914,
-    "VolatilityCV": 0.11063762607509736,
+    "MeanDistance": 0.7010387794070292,
+    "VolatilityCV": 0.16839293985260775,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
@@ -346,17 +328,35 @@
     "Label": 1,
     "IsMemberTrue": true,
     "ShadowLoss": 8.937661800691433,
-    "MeanDistance": 0.45636852386779575,
-    "VolatilityCV": 0.019010806321041206,
+    "MeanDistance": 0.4505001362358689,
+    "VolatilityCV": 0.01130701559319389,
     "Conclusion": "🟡 【 风险较高 - 单一维度疑似 】"
+  },
+  {
+    "SampleID": 10298,
+    "Label": 1,
+    "IsMemberTrue": true,
+    "ShadowLoss": -0,
+    "MeanDistance": 1.296279269192456,
+    "VolatilityCV": 0.016027389834328422,
+    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
+  },
+  {
+    "SampleID": 25573,
+    "Label": 8,
+    "IsMemberTrue": true,
+    "ShadowLoss": 5.364419468634711e-7,
+    "MeanDistance": 0.5015787188480373,
+    "VolatilityCV": 0.028611668810063526,
+    "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
   },
   {
     "SampleID": 19298,
     "Label": 2,
     "IsMemberTrue": true,
     "ShadowLoss": 5.960464655174753e-8,
-    "MeanDistance": 0.7128352215987908,
-    "VolatilityCV": 0.012029236793330528,
+    "MeanDistance": 0.7053880456564613,
+    "VolatilityCV": 0.014906030849363648,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
@@ -364,8 +364,8 @@
     "Label": 1,
     "IsMemberTrue": true,
     "ShadowLoss": -0,
-    "MeanDistance": 0.8480275952518593,
-    "VolatilityCV": 0.01473158480163632,
+    "MeanDistance": 0.8587571673779938,
+    "VolatilityCV": 0.023700486443358912,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
@@ -373,8 +373,8 @@
     "Label": 6,
     "IsMemberTrue": true,
     "ShadowLoss": 5.960464655174753e-8,
-    "MeanDistance": 0.8570842411072636,
-    "VolatilityCV": 0.16032914758087027,
+    "MeanDistance": 0.8493820182220779,
+    "VolatilityCV": 0.16834110456770052,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
@@ -382,8 +382,8 @@
     "Label": 5,
     "IsMemberTrue": true,
     "ShadowLoss": -0,
-    "MeanDistance": 0.8723010228695205,
-    "VolatilityCV": 0.018114359610542252,
+    "MeanDistance": 0.8645832741589768,
+    "VolatilityCV": 0.012850769703219467,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
@@ -391,8 +391,8 @@
     "Label": 4,
     "IsMemberTrue": true,
     "ShadowLoss": 0.0000041723338384500676,
-    "MeanDistance": 0.5661000729853032,
-    "VolatilityCV": 0.025413358744997477,
+    "MeanDistance": 0.5610103581413726,
+    "VolatilityCV": 0.022654070149867752,
     "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
   },
   {
@@ -400,18 +400,9 @@
     "Label": 5,
     "IsMemberTrue": true,
     "ShadowLoss": -0,
-    "MeanDistance": 0.9304085390519193,
-    "VolatilityCV": 0.010628735605082328,
+    "MeanDistance": 0.8910665514405369,
+    "VolatilityCV": 0.08791661411642415,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
-  },
-  {
-    "SampleID": 8038,
-    "Label": 7,
-    "IsMemberTrue": true,
-    "ShadowLoss": 0.0006852112813986122,
-    "MeanDistance": 0.5563307644852954,
-    "VolatilityCV": 0.04058780169542062,
-    "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
   },
   {
     "SampleID": 11,
@@ -450,39 +441,30 @@
     "Conclusion": "🟢 【 安全样本 - 非成员 (模型预测错误) 】"
   },
   {
+    "SampleID": 8038,
+    "Label": 7,
+    "IsMemberTrue": true,
+    "ShadowLoss": 0.0006852112813986122,
+    "MeanDistance": 0.5437164934089106,
+    "VolatilityCV": 0.009851850987811227,
+    "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
+  },
+  {
     "SampleID": 25261,
     "Label": 0,
     "IsMemberTrue": true,
     "ShadowLoss": -0,
-    "MeanDistance": 1.4807349399786076,
-    "VolatilityCV": 0.044973184065031806,
+    "MeanDistance": 1.4501861807946197,
+    "VolatilityCV": 0.10328887849260043,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
-  },
-  {
-    "SampleID": 0,
-    "Label": 3,
-    "IsMemberTrue": false,
-    "ShadowLoss": 0.00002443820296835981,
-    "MeanDistance": 0.42036977030393136,
-    "VolatilityCV": 0.252987898546473,
-    "Conclusion": "🟡 【 风险较高 - 单一维度疑似 】"
   },
   {
     "SampleID": 32634,
     "Label": 4,
     "IsMemberTrue": true,
     "ShadowLoss": 0.0024700843954694896,
-    "MeanDistance": 0.9265904656965791,
-    "VolatilityCV": 0.0245744743190411,
-    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
-  },
-  {
-    "SampleID": 15073,
-    "Label": 7,
-    "IsMemberTrue": true,
-    "ShadowLoss": 2.9802326828588295e-7,
-    "MeanDistance": 0.6952880612999411,
-    "VolatilityCV": 0.01768752920132999,
+    "MeanDistance": 0.9192409725860333,
+    "VolatilityCV": 0.019878288807212912,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
@@ -490,44 +472,53 @@
     "Label": 2,
     "IsMemberTrue": true,
     "ShadowLoss": 0.12412486061742024,
-    "MeanDistance": 0.6473945083425483,
-    "VolatilityCV": 0.22964468432104776,
+    "MeanDistance": 0.7014369903648624,
+    "VolatilityCV": 0.1992293732651061,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
-    "SampleID": 2,
-    "Label": 8,
+    "SampleID": 0,
+    "Label": 3,
     "IsMemberTrue": false,
-    "ShadowLoss": 0.0000016093267039010721,
-    "MeanDistance": 0.2769758461669718,
-    "VolatilityCV": 0.016561522564962274,
-    "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
+    "ShadowLoss": 0.00002443820296835981,
+    "MeanDistance": 0.4412378701417218,
+    "VolatilityCV": 0.2162313610538399,
+    "Conclusion": "🟡 【 风险较高 - 单一维度疑似 】"
   },
   {
     "SampleID": 3,
     "Label": 0,
     "IsMemberTrue": false,
     "ShadowLoss": 1.1920929665620916e-7,
-    "MeanDistance": 0.12546591373497715,
-    "VolatilityCV": 0.019289336053222993,
+    "MeanDistance": 0.1262647107691749,
+    "VolatilityCV": 0.03082418683266314,
     "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
+  },
+  {
+    "SampleID": 2,
+    "Label": 8,
+    "IsMemberTrue": false,
+    "ShadowLoss": 0.0000016093267039010721,
+    "MeanDistance": 0.2781088320857815,
+    "VolatilityCV": 0.019414714986224553,
+    "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
+  },
+  {
+    "SampleID": 15073,
+    "Label": 7,
+    "IsMemberTrue": true,
+    "ShadowLoss": 2.9802326828588295e-7,
+    "MeanDistance": 0.692548795748387,
+    "VolatilityCV": 0.020264247859861324,
+    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
     "SampleID": 4,
     "Label": 6,
     "IsMemberTrue": false,
     "ShadowLoss": 5.960464655174753e-8,
-    "MeanDistance": 0.984254267995189,
-    "VolatilityCV": 0.14945499284739822,
-    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
-  },
-  {
-    "SampleID": 5,
-    "Label": 6,
-    "IsMemberTrue": false,
-    "ShadowLoss": -0,
-    "MeanDistance": 0.7432651739145768,
-    "VolatilityCV": 0.021222059344958587,
+    "MeanDistance": 0.873277655038054,
+    "VolatilityCV": 0.2660629480067061,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
@@ -535,17 +526,26 @@
     "Label": 3,
     "IsMemberTrue": false,
     "ShadowLoss": 0.00170746102502936,
-    "MeanDistance": 0.5129831387394455,
-    "VolatilityCV": 0.023160732247488776,
+    "MeanDistance": 0.5250864512346,
+    "VolatilityCV": 0.01713859105751966,
     "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
+  },
+  {
+    "SampleID": 5,
+    "Label": 6,
+    "IsMemberTrue": false,
+    "ShadowLoss": -0,
+    "MeanDistance": 0.734808489854328,
+    "VolatilityCV": 0.027232933198718383,
+    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
     "SampleID": 6,
     "Label": 1,
     "IsMemberTrue": false,
     "ShadowLoss": -0,
-    "MeanDistance": 0.5310451471237417,
-    "VolatilityCV": 0.3104600594537724,
+    "MeanDistance": 0.4898331448175956,
+    "VolatilityCV": 0.09395085221293521,
     "Conclusion": "🟡 【 风险较高 - 单一维度疑似 】"
   },
   {
@@ -553,8 +553,8 @@
     "Label": 1,
     "IsMemberTrue": false,
     "ShadowLoss": 1.7881395031338534e-7,
-    "MeanDistance": 0.08868822107720799,
-    "VolatilityCV": 0.0422441605562736,
+    "MeanDistance": 0.09065685743677587,
+    "VolatilityCV": 0.03532963883304117,
     "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
   },
   {
@@ -562,8 +562,8 @@
     "Label": 0,
     "IsMemberTrue": false,
     "ShadowLoss": 0.0002800618348096088,
-    "MeanDistance": 0.1049324964555559,
-    "VolatilityCV": 0.028221941026554613,
+    "MeanDistance": 0.10656497966841262,
+    "VolatilityCV": 0.02303030905437845,
     "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
   },
   {
@@ -580,8 +580,8 @@
     "Label": 5,
     "IsMemberTrue": false,
     "ShadowLoss": -0,
-    "MeanDistance": 0.27275810464600125,
-    "VolatilityCV": 0.019410895444118458,
+    "MeanDistance": 0.2715311093539763,
+    "VolatilityCV": 0.019426693329553855,
     "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
   },
   {
@@ -598,8 +598,8 @@
     "Label": 7,
     "IsMemberTrue": false,
     "ShadowLoss": -0,
-    "MeanDistance": 0.5321020801526875,
-    "VolatilityCV": 0.017007711824336212,
+    "MeanDistance": 0.5343265919566383,
+    "VolatilityCV": 0.015609698564477184,
     "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
   },
   {
@@ -607,18 +607,9 @@
     "Label": 8,
     "IsMemberTrue": false,
     "ShadowLoss": 4.932065540908379,
-    "MeanDistance": 0.17982552366905027,
-    "VolatilityCV": 0.023162547758193347,
+    "MeanDistance": 0.18073377939904797,
+    "VolatilityCV": 0.03160614268880368,
     "Conclusion": "🟡 【 风险较高 - 单一维度疑似 】"
-  },
-  {
-    "SampleID": 16,
-    "Label": 5,
-    "IsMemberTrue": false,
-    "ShadowLoss": -0,
-    "MeanDistance": 0.0752256674552559,
-    "VolatilityCV": 0.020364289611953214,
-    "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
   },
   {
     "SampleID": 34,
@@ -630,12 +621,12 @@
     "Conclusion": "🟢 【 安全样本 - 非成员 (模型预测错误) 】"
   },
   {
-    "SampleID": 17,
-    "Label": 7,
+    "SampleID": 16,
+    "Label": 5,
     "IsMemberTrue": false,
-    "ShadowLoss": 0.0002555577642559766,
-    "MeanDistance": 0.25352790754897475,
-    "VolatilityCV": 0.01485789876451557,
+    "ShadowLoss": -0,
+    "MeanDistance": 0.07747384379649155,
+    "VolatilityCV": 0.037753853638299695,
     "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
   },
   {
@@ -666,24 +657,6 @@
     "Conclusion": "🟢 【 安全样本 - 非成员 (模型预测错误) 】"
   },
   {
-    "SampleID": 26,
-    "Label": 4,
-    "IsMemberTrue": false,
-    "ShadowLoss": 23,
-    "MeanDistance": 0,
-    "VolatilityCV": 99,
-    "Conclusion": "🟢 【 安全样本 - 非成员 (模型预测错误) 】"
-  },
-  {
-    "SampleID": 18,
-    "Label": 8,
-    "IsMemberTrue": false,
-    "ShadowLoss": 0.0000756411549400012,
-    "MeanDistance": 0.3125933717411919,
-    "VolatilityCV": 0.01582104800575932,
-    "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
-  },
-  {
     "SampleID": 27,
     "Label": 0,
     "IsMemberTrue": false,
@@ -693,13 +666,31 @@
     "Conclusion": "🟢 【 安全样本 - 非成员 (模型预测错误) 】"
   },
   {
-    "SampleID": 19,
-    "Label": 6,
+    "SampleID": 26,
+    "Label": 4,
     "IsMemberTrue": false,
-    "ShadowLoss": -0,
-    "MeanDistance": 0.9551136228533861,
-    "VolatilityCV": 0.40807826934200353,
-    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
+    "ShadowLoss": 23,
+    "MeanDistance": 0,
+    "VolatilityCV": 99,
+    "Conclusion": "🟢 【 安全样本 - 非成员 (模型预测错误) 】"
+  },
+  {
+    "SampleID": 17,
+    "Label": 7,
+    "IsMemberTrue": false,
+    "ShadowLoss": 0.0002555577642559766,
+    "MeanDistance": 0.25160450687772723,
+    "VolatilityCV": 0.019111194665732974,
+    "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
+  },
+  {
+    "SampleID": 18,
+    "Label": 8,
+    "IsMemberTrue": false,
+    "ShadowLoss": 0.0000756411549400012,
+    "MeanDistance": 0.3147039621952737,
+    "VolatilityCV": 0.023460695206375243,
+    "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
   },
   {
     "SampleID": 32,
@@ -720,7 +711,16 @@
     "Conclusion": "🟢 【 安全样本 - 非成员 (模型预测错误) 】"
   },
   {
-    "SampleID": 45,
+    "SampleID": 35,
+    "Label": 2,
+    "IsMemberTrue": false,
+    "ShadowLoss": 23,
+    "MeanDistance": 0,
+    "VolatilityCV": 99,
+    "Conclusion": "🟢 【 安全样本 - 非成员 (模型预测错误) 】"
+  },
+  {
+    "SampleID": 47,
     "Label": 9,
     "IsMemberTrue": false,
     "ShadowLoss": 23,
@@ -729,13 +729,13 @@
     "Conclusion": "🟢 【 安全样本 - 非成员 (模型预测错误) 】"
   },
   {
-    "SampleID": 35,
-    "Label": 2,
+    "SampleID": 19,
+    "Label": 6,
     "IsMemberTrue": false,
-    "ShadowLoss": 23,
-    "MeanDistance": 0,
-    "VolatilityCV": 99,
-    "Conclusion": "🟢 【 安全样本 - 非成员 (模型预测错误) 】"
+    "ShadowLoss": -0,
+    "MeanDistance": 1.0475383421550386,
+    "VolatilityCV": 0.296637767788184,
+    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
     "SampleID": 40,
@@ -747,6 +747,24 @@
     "Conclusion": "🟢 【 安全样本 - 非成员 (模型预测错误) 】"
   },
   {
+    "SampleID": 20,
+    "Label": 7,
+    "IsMemberTrue": false,
+    "ShadowLoss": -0,
+    "MeanDistance": 0.3828065666148899,
+    "VolatilityCV": 0.014442670798059136,
+    "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
+  },
+  {
+    "SampleID": 21,
+    "Label": 0,
+    "IsMemberTrue": false,
+    "ShadowLoss": 0.0004960336488827222,
+    "MeanDistance": 0.5321486317759282,
+    "VolatilityCV": 0.016781472773084,
+    "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
+  },
+  {
     "SampleID": 42,
     "Label": 5,
     "IsMemberTrue": false,
@@ -756,48 +774,21 @@
     "Conclusion": "🟢 【 安全样本 - 非成员 (模型预测错误) 】"
   },
   {
-    "SampleID": 20,
-    "Label": 7,
-    "IsMemberTrue": false,
-    "ShadowLoss": -0,
-    "MeanDistance": 0.3839784347983332,
-    "VolatilityCV": 0.02233507273036868,
-    "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
-  },
-  {
-    "SampleID": 21,
-    "Label": 0,
-    "IsMemberTrue": false,
-    "ShadowLoss": 0.0004960336488827222,
-    "MeanDistance": 0.5278096139851982,
-    "VolatilityCV": 0.0125833443789405,
-    "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
-  },
-  {
     "SampleID": 25,
     "Label": 2,
     "IsMemberTrue": false,
     "ShadowLoss": 0.000026464812470333737,
-    "MeanDistance": 0.22309947606334915,
-    "VolatilityCV": 0.022680639932754647,
+    "MeanDistance": 0.22509468629744556,
+    "VolatilityCV": 0.03191243611858348,
     "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
-  },
-  {
-    "SampleID": 31,
-    "Label": 5,
-    "IsMemberTrue": false,
-    "ShadowLoss": 5.960464655174753e-8,
-    "MeanDistance": 0.28644797122505267,
-    "VolatilityCV": 0.16064346070554658,
-    "Conclusion": "🟡 【 风险较高 - 单一维度疑似 】"
   },
   {
     "SampleID": 29,
     "Label": 6,
     "IsMemberTrue": false,
     "ShadowLoss": -0,
-    "MeanDistance": 0.06296849042698759,
-    "VolatilityCV": 0.06750033446905568,
+    "MeanDistance": 0.062740844398201,
+    "VolatilityCV": 0.05358534906177049,
     "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
   },
   {
@@ -805,9 +796,18 @@
     "Label": 6,
     "IsMemberTrue": false,
     "ShadowLoss": 0.004374761092909556,
-    "MeanDistance": 0.20601715872226956,
-    "VolatilityCV": 0.030723599871642162,
+    "MeanDistance": 0.20810892359938382,
+    "VolatilityCV": 0.030822942052513444,
     "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
+  },
+  {
+    "SampleID": 31,
+    "Label": 5,
+    "IsMemberTrue": false,
+    "ShadowLoss": 5.960464655174753e-8,
+    "MeanDistance": 0.26270769071749567,
+    "VolatilityCV": 0.18216942594681995,
+    "Conclusion": "🟡 【 风险较高 - 单一维度疑似 】"
   },
   {
     "SampleID": 49,
@@ -823,8 +823,8 @@
     "Label": 4,
     "IsMemberTrue": false,
     "ShadowLoss": 0.013442942980377414,
-    "MeanDistance": 0.729344432829473,
-    "VolatilityCV": 0.026680030800912736,
+    "MeanDistance": 0.7271912556367012,
+    "VolatilityCV": 0.020500682151798507,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
@@ -832,17 +832,17 @@
     "Label": 1,
     "IsMemberTrue": false,
     "ShadowLoss": -0,
-    "MeanDistance": 0.09026765105949532,
-    "VolatilityCV": 0.04109434726084428,
-    "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
+    "MeanDistance": 0.08464012052956037,
+    "VolatilityCV": 0.3373152531016267,
+    "Conclusion": "🟡 【 风险较高 - 单一维度疑似 】"
   },
   {
     "SampleID": 39,
     "Label": 5,
     "IsMemberTrue": false,
     "ShadowLoss": -0,
-    "MeanDistance": 0.4735836585349771,
-    "VolatilityCV": 0.010132155949277612,
+    "MeanDistance": 0.47335424450989816,
+    "VolatilityCV": 0.013081736935888776,
     "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
   },
   {
@@ -850,8 +850,8 @@
     "Label": 6,
     "IsMemberTrue": false,
     "ShadowLoss": -0,
-    "MeanDistance": 1.7549495195201954,
-    "VolatilityCV": 0.025528089797042845,
+    "MeanDistance": 1.713181588443001,
+    "VolatilityCV": 0.032430728303237455,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
@@ -859,44 +859,44 @@
     "Label": 6,
     "IsMemberTrue": false,
     "ShadowLoss": -0,
-    "MeanDistance": 0.7249342124527061,
-    "VolatilityCV": 0.17326118045075214,
+    "MeanDistance": 0.6953650171704453,
+    "VolatilityCV": 0.191585110335743,
     "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
-  },
-  {
-    "SampleID": 44,
-    "Label": 0,
-    "IsMemberTrue": false,
-    "ShadowLoss": -0,
-    "MeanDistance": 0.3711460992192259,
-    "VolatilityCV": 1.0699493158124351,
-    "Conclusion": "🟡 【 风险较高 - 单一维度疑似 】"
   },
   {
     "SampleID": 46,
     "Label": 3,
     "IsMemberTrue": false,
     "ShadowLoss": 6.457981192352584,
-    "MeanDistance": 0.044176049414242996,
-    "VolatilityCV": 0.04784073446991693,
+    "MeanDistance": 0.03987074720380007,
+    "VolatilityCV": 0.33576238864618985,
     "Conclusion": "🟡 【 风险较高 - 单一维度疑似 】"
+  },
+  {
+    "SampleID": 44,
+    "Label": 0,
+    "IsMemberTrue": false,
+    "ShadowLoss": -0,
+    "MeanDistance": 0.7300950967490377,
+    "VolatilityCV": 0.3364414706907787,
+    "Conclusion": "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
   },
   {
     "SampleID": 48,
     "Label": 7,
     "IsMemberTrue": false,
     "ShadowLoss": 0.0215405510436967,
-    "MeanDistance": 0.10553814955338313,
-    "VolatilityCV": 0.025632826067460163,
+    "MeanDistance": 0.10556030187850153,
+    "VolatilityCV": 0.038984265156011,
     "Conclusion": "🔴 【 确认为模型成员 - 行为实锤 \u0026 局部特征稳定 】"
   },
   {
-    "SampleID": 47,
+    "SampleID": 45,
     "Label": 9,
     "IsMemberTrue": false,
-    "ShadowLoss": 5.819213306616718,
-    "MeanDistance": 0.03049024909002103,
-    "VolatilityCV": 2.2249353058378776,
+    "ShadowLoss": -0,
+    "MeanDistance": 0.25204228433902415,
+    "VolatilityCV": 1.1491693045608282,
     "Conclusion": "🟡 【 风险较高 - 单一维度疑似 】"
   }
 ]

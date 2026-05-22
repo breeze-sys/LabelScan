@@ -14,8 +14,9 @@ import (
 
 // 专门为 Python 训练定义的导出格式
 type ShadowExportRecord struct {
-	Image []float32 `json:"image"`
-	Label int       `json:"target_label"`
+	Image       []float32 `json:"image"`
+	TrueLabel   int       `json:"label"`        // 🚨 新增：保存原始真实物理标签 (Ground Truth)
+	TargetLabel int       `json:"target_label"` // 目标模型重标后的标签
 }
 
 func main() {
@@ -49,13 +50,15 @@ func main() {
 	fmt.Printf("✅ 重标完成！总耗时: %v\n", time.Since(start))
 
 	// 4. 将重标后的数据转化为 JSON 格式
+	// 4. 将重标后的数据转化为 JSON 格式
 	fmt.Println("💾 正在将数据序列化为 shadow_train_data.json...")
 
 	exportData := make([]ShadowExportRecord, len(samples))
 	for i, s := range samples {
 		exportData[i] = ShadowExportRecord{
-			Image: s.Data,
-			Label: s.TargetLabel,
+			Image:       s.Data,
+			TrueLabel:   s.Label,       // 🚨 核心修复：把原汁原味的二进制真实标签装车！
+			TargetLabel: s.TargetLabel, // 目标模型重标后的标签
 		}
 	}
 
