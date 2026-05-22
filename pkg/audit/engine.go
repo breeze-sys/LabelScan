@@ -51,12 +51,12 @@ func (e *Engine) AuditSample(sample core.Sample) core.AuditResult {
 	tmpOrig := core.Sample{Data: sample.Data, Label: sample.Label}
 	origAtk := e.attacker.Attack(tmpOrig, e.target)
 
-	// 如果模型连原图都预测错了，直接判定为安全，省去后续所有计算
+	// 如果模型连原图都预测错了，当前证据不足以支持成员风险判断。
 	if origAtk.Distance < 1e-6 {
 		res.ShadowLoss = 23.0
 		res.MeanDistance = 0
 		res.VolatilityCV = 99.0
-		res.Conclusion = "🟢 【 安全样本 - 非成员 (模型预测错误) 】"
+		res.Conclusion = "🟢 低成员风险：目标模型未能正确识别原图，当前证据不足"
 		return res
 	}
 
@@ -139,20 +139,20 @@ func (e *Engine) probeAll(variants [][]float32, label int) []float64 {
 
 func (e *Engine) fusionLogic(s1, s2 string) string {
 	if s2 == SignalRed && s1 == SignalRed {
-		return "🔴 【 确认为模型成员 - 证据闭环绝对实锤 】"
+		return "🔴 高成员风险：边界几何信号与影子模型行为信号同时偏向成员"
 	}
 	if s2 == SignalRed && s1 == SignalYellow {
-		return "🔴 【 确认为模型成员 - 边界突破 & 行为特征吻合 】"
+		return "🔴 高成员风险：边界距离异常，影子模型行为信号同步升高"
 	}
 	if s1 == SignalRed && s2 == SignalYellow {
-		return "🔴 【 确认为模型成员 - 行为实锤 & 局部特征稳定 】"
+		return "🔴 高成员风险：影子模型行为信号显著，局部边界表现稳定"
 	}
-	// 核心降级：距离虽远，但真实Loss极大(S1没见过)，降级为橙色
+	// 核心降级：距离虽远，但行为信号不支持成员判断。
 	if s2 == SignalRed && s1 == SignalGreen {
-		return "🟠 【 中度风险 - 异常距离(目标模型神经质)，但行为不符 】"
+		return "🟠 中等成员风险：边界距离异常，但影子模型行为证据不足"
 	}
 	if s1 == SignalRed || s2 == SignalYellow || s1 == SignalYellow {
-		return "🟡 【 风险较高 - 单一维度疑似 】"
+		return "🟡 较高成员风险：单一证据源显示成员化迹象"
 	}
-	return "🟢 【 安全样本 - 非成员 】"
+	return "🟢 低成员风险：当前证据不足以支持成员推断"
 }

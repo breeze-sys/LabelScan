@@ -1,0 +1,115 @@
+services:
+  target-oracle:
+    build:
+      context: .
+      dockerfile: docker/oracle.Dockerfile
+    environment:
+      PORT: 8000
+      SERVICE_NAME: target-oracle
+      MODEL_PATH: ${TARGET_MODEL_PATH:-python_server/CIFAR10/target/3000/best_checkpoint_ep.pth}
+    ports:
+      - "${HOST_TARGET_PORT:-8000}:8000"
+    volumes:
+      - ./python_server/CIFAR10:/app/python_server/CIFAR10:ro
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import os, urllib.request; urllib.request.urlopen('http://127.0.0.1:%s/health' % os.environ.get('PORT', '8000')).read()\""]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  shadow-oracle:
+    build:
+      context: .
+      dockerfile: docker/oracle.Dockerfile
+    environment:
+      PORT: 8001
+      SERVICE_NAME: shadow-oracle
+      MODEL_PATH: ${SHADOW_MODEL_PATH:-python_server/CIFAR10/shadow_json_aligned/best_checkpoint_ep.pth}
+    ports:
+      - "${HOST_SHADOW_PORT:-8001}:8001"
+    volumes:
+      - ./python_server/CIFAR10:/app/python_server/CIFAR10:ro
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import os, urllib.request; urllib.request.urlopen('http://127.0.0.1:%s/health' % os.environ.get('PORT', '8001')).read()\""]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  labelscan-web:
+    build:
+      context: .
+      dockerfile: docker/audit-runner.Dockerfile
+    depends_on:
+      target-oracle:
+        condition: service_healthy
+      shadow-oracle:
+        condition: service_healthy
+    command:
+      - /app/labelscan
+      - --serve
+      - --addr
+      - 0.0.0.0:8080
+      - --preset
+      - smoke
+      - --audit-mode
+      - full
+      - --target-api
+      - http://target-oracle:8000
+      - --shadow-api
+      - http://shadow-oracle:8001
+      - --shadow-config
+      - shadow_config.json
+      - --member-index
+      - target_members.json
+      - --member-root
+      - data/cifar-10-batches-bin
+      - --calibration-data
+      - data/cifar-10-batches-bin/test_batch.bin
+      - --non-member-data
+      - data/cifar-10-batches-bin/test_batch.bin
+    ports:
+      - "${HOST_WEB_PORT:-8080}:8080"
+    volumes:
+      - ./data:/app/data:ro
+      - ./target_members.json:/app/target_members.json:ro
+      - ./shadow_config.json:/app/shadow_config.json:ro
+      - ./output:/app/output
+
+  audit-runner:
+    profiles: ["cli"]
+    build:
+      context: .
+      dockerfile: docker/audit-runner.Dockerfile
+    depends_on:
+      target-oracle:
+        condition: service_healthy
+      shadow-oracle:
+        condition: service_healthy
+    command:
+      - /app/labelscan
+      - --preset
+      - smoke
+      - --audit-mode
+      - full
+      - --target-api
+      - http://target-oracle:8000
+      - --shadow-api
+      - http://shadow-oracle:8001
+      - --shadow-config
+      - shadow_config.json
+      - --member-index
+      - target_members.json
+      - --member-root
+      - data/cifar-10-batches-bin
+      - --calibration-data
+      - data/cifar-10-batches-bin/test_batch.bin
+      - --non-member-data
+      - data/cifar-10-batches-bin/test_batch.bin
+    volumes:
+      - ./data:/app/data:ro
+      - ./target_members.json:/app/target_members.json:ro
+      - ./shadow_config.json:/app/shadow_config.json:ro
+      - ./output:/app/output
+    restart: "no"

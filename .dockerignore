@@ -1,0 +1,13 @@
+.git
+.codex
+.gocache
+dist
+output
+*.zip
+*.tar.gz
+Label-Only-MIA-Go
+__pycache__
+*.pyc
+python_server/CIFAR10
+python_server/data
+data

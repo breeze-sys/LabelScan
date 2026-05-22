@@ -111,6 +111,16 @@ class BatchPredictResponse(BaseModel):
 
 # --- API 实现 ---
 
+@app.get("/health")
+async def health():
+    return {
+        "status": "ok" if model is not None else "loading",
+        "model_loaded": model is not None,
+        "model_path": CHECKPOINT_PATH,
+        "device": DEVICE,
+        "service_name": os.getenv("SERVICE_NAME", "oracle"),
+    }
+
 # 接口 1: 单图预测 (兼容 /predict 和 /predict_logits)
 @app.post("/predict", response_model=PredictResponse)
 @app.post("/predict_logits", response_model=PredictResponse) # 别名路由，防备队友写错路径
