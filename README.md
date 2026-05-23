@@ -184,4 +184,8 @@ python calc_thresholds.py
 
 ## License
 
-请在正式发布前补齐许可证文件，并确认第三方依赖许可证与项目发布方式兼容。
+本项目源码采用 MIT License 发布，详见 [LICENSE](LICENSE)。
+
+第三方依赖、容器基础镜像、数据集与模型资产的许可说明见
+[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)。CIFAR-10 等第三方数据资产
+不由本项目许可证重新授权，使用者应遵循其原始发布条款。
