@@ -1,5 +1,7 @@
 # LabelScan-Go
 
+面向分类模型的 Label-Only 成员推理风险审计工具，融合边界搜索、影子模型信号与 Docker 化复现。
+
 LabelScan-Go 是一个面向分类模型的 label-only membership inference audit 工具。目标模型侧只依赖预测标签；影子模型侧使用必要的分类分数接口来计算 loss，从而评估某批样本是否可能出现在目标模型的训练集中，并输出可读的成员风险报告。
 
 本项目由 Go 审计引擎和 Python 模型服务组成。Go 侧负责并发调度、边界搜索、信号融合和报告生成；Python 侧负责加载目标模型与影子模型，并以 HTTP API 的形式提供推理能力。当前仓库内置 CIFAR-10 示例模型，便于直接复现完整流程。
@@ -171,6 +173,7 @@ python calc_thresholds.py
 ├── python_server/server.py         # PyTorch 模型推理服务
 ├── python_server/classifier.py     # CNN 模型定义
 ├── python_server/calc_thresholds.py# 影子模型阈值计算
+├── scripts/evaluation/             # 可选评估与成员索引导出脚本
 ├── shadow_config.json              # 当前影子模型阈值
 └── target_members.json             # 当前目标模型成员索引
 ```

@@ -38,13 +38,12 @@ func NewHSJA(cfg HSJAConfig) *HSJA {
 	return &HSJA{config: cfg}
 }
 
-// Attack 实现升级后的 core.Attacker 接口
+// Attack estimates the distance from a sample to the target model decision boundary.
 func (atk *HSJA) Attack(sample core.Sample, model core.Model) core.AttackResult {
 	queries := 0
 
 	predictFunc := func(img []float32) int {
 		queries++
-		// 注意：将 []float32 转换为 core.Image 以匹配接口
 		l, _ := model.Predict(core.Image(img))
 		return l
 	}
@@ -52,7 +51,6 @@ func (atk *HSJA) Attack(sample core.Sample, model core.Model) core.AttackResult 
 	original := sample.Data
 	targetLabel := sample.Label
 
-	// 1. 初始化
 	xAdv := atk.initialize(original, targetLabel, predictFunc)
 	if xAdv == nil {
 		return core.AttackResult{
@@ -62,32 +60,25 @@ func (atk *HSJA) Attack(sample core.Sample, model core.Model) core.AttackResult 
 		}
 	}
 
-	// 2. 初始二分查找
 	xAdv = atk.binarySearch(original, xAdv, targetLabel, predictFunc)
 	dist := mathutils.L2Distance(original, xAdv)
 
-	// 3. 迭代优化循环
 	for i := 0; i < atk.config.MaxIterations; i++ {
 		if queries >= atk.config.MaxQueries {
 			break
 		}
 
-		// A. 梯度估计
 		delta := atk.computeDelta(float32(dist), i)
 		grad := atk.approximateGradient(xAdv, targetLabel, delta, model, &queries)
 
-		// B. 几何级数步进
 		stepSize := atk.computeStepSize(float32(dist), i)
 		stepVec := mathutils.VectorScale(grad, stepSize)
 		xNew := mathutils.VectorAdd(xAdv, stepVec)
 
-		// C. 投影与裁剪
 		xNew = mathutils.Clip(xNew, atk.config.ClipMin, atk.config.ClipMax)
 
-		// D. 再次二分查找
 		xNew = atk.binarySearch(original, xNew, targetLabel, predictFunc)
 
-		// E. 更新最优解
 		newDist := mathutils.L2Distance(original, xNew)
 		if newDist < dist {
 			dist = newDist
@@ -95,7 +86,6 @@ func (atk *HSJA) Attack(sample core.Sample, model core.Model) core.AttackResult 
 		}
 	}
 
-	// 最终只返回最核心的物理指标
 	return core.AttackResult{
 		SampleID: sample.ID,
 		Distance: dist,
@@ -103,7 +93,7 @@ func (atk *HSJA) Attack(sample core.Sample, model core.Model) core.AttackResult 
 	}
 }
 
-// initialize 寻找初始对抗样本
+// initialize searches for an initial sample that crosses the target boundary.
 func (atk *HSJA) initialize(original []float32, label int, predict func([]float32) int) []float32 {
 	if predict(original) != label {
 		return original
@@ -118,7 +108,7 @@ func (atk *HSJA) initialize(original []float32, label int, predict func([]float3
 	return nil
 }
 
-// binarySearch 二分查找边界
+// binarySearch refines an adversarial sample onto the decision boundary.
 func (atk *HSJA) binarySearch(original, adversarial []float32, targetLabel int, predict func([]float32) int) []float32 {
 	low := 0.0
 	high := 1.0
@@ -139,7 +129,7 @@ func (atk *HSJA) binarySearch(original, adversarial []float32, targetLabel int, 
 	return boundaryPoint
 }
 
-// approximateGradient 梯度估计 (修正了类型转换问题)
+// approximateGradient estimates the boundary normal with batched label queries.
 func (atk *HSJA) approximateGradient(sample []float32, label int, delta float32, model core.Model, queries *int) []float32 {
 	numEvals := atk.config.NumEvals
 	inputSize := len(sample)
@@ -156,7 +146,6 @@ func (atk *HSJA) approximateGradient(sample []float32, label int, delta float32,
 		posPoint := mathutils.VectorAdd(sample, perturbation)
 		posPoint = mathutils.Clip(posPoint, atk.config.ClipMin, atk.config.ClipMax)
 
-		// 显式转换为 core.Image
 		batchImgs[j] = core.Image(posPoint)
 	}
 

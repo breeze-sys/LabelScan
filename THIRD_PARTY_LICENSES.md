@@ -32,10 +32,10 @@ The Python oracle service and Docker image use the following major packages.
 
 ## Optional Training And Evaluation Components
 
-Some scripts under `python_server/`, `eval.py`, and related experiment utilities
-may use additional scientific Python packages. These are not required by the
-minimal Go audit binary, but may be needed when retraining models, recalculating
-thresholds, or reproducing plots.
+Some scripts under `python_server/`, `scripts/evaluation/`, and related
+experiment utilities may use additional scientific Python packages. These are
+not required by the minimal Go audit binary, but may be needed when retraining
+models, recalculating thresholds, or reproducing plots.
 
 | Component | Usage | License |
 | --- | --- | --- |
