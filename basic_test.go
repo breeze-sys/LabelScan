@@ -172,3 +172,24 @@ func TestCalibrateReference(t *testing.T) {
 		t.Errorf("tauCV 计算错误: 期望 0.1, 实际 %v", tauCV)
 	}
 }
+
+func TestApplyPresetResetsFromSmokeToStandard(t *testing.T) {
+	cfg := defaultConfig()
+
+	if err := applyPreset(&cfg, "smoke"); err != nil {
+		t.Fatalf("apply smoke preset: %v", err)
+	}
+	if cfg.MemberSampleCount != 1 || cfg.NonMemberSampleCount != 1 {
+		t.Fatalf("smoke preset should use 1+1 samples, got %d+%d", cfg.MemberSampleCount, cfg.NonMemberSampleCount)
+	}
+
+	if err := applyPreset(&cfg, "standard"); err != nil {
+		t.Fatalf("apply standard preset: %v", err)
+	}
+	if cfg.MemberSampleCount != 50 || cfg.NonMemberSampleCount != 50 {
+		t.Fatalf("standard preset should reset to 50+50 samples, got %d+%d", cfg.MemberSampleCount, cfg.NonMemberSampleCount)
+	}
+	if cfg.MaxIterations != 40 || cfg.NumEvals != 100 {
+		t.Fatalf("standard preset should reset HSJA parameters, got iterations=%d evals=%d", cfg.MaxIterations, cfg.NumEvals)
+	}
+}

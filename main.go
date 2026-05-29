@@ -157,12 +157,25 @@ func envOrDefault(key, fallback string) string {
 	return fallback
 }
 
+func applyStandardPreset(cfg *runConfig) {
+	cfg.CalibrationCandidateCount = 100
+	cfg.CalibrationTargetCount = 10
+	cfg.MinValidStrangers = 5
+	cfg.MemberSampleCount = 50
+	cfg.NonMemberSampleCount = 50
+	cfg.AuditWorkers = 20
+	cfg.MaxQueries = 5000
+	cfg.MaxIterations = 40
+	cfg.NumEvals = 100
+}
+
 func applyPreset(cfg *runConfig, preset string) error {
 	normalized := strings.ToLower(strings.TrimSpace(preset))
 	if normalized == "" {
 		normalized = "standard"
 	}
 	cfg.Preset = normalized
+	applyStandardPreset(cfg)
 	switch normalized {
 	case "smoke":
 		cfg.CalibrationCandidateCount = 10
