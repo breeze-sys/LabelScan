@@ -758,23 +758,25 @@ func startWebServer(cfg runConfig, addr string) error {
 		if req.ShadowAPI != "" {
 			runCfg.ShadowAPI = req.ShadowAPI
 		}
-		if req.MemberSamples > 0 {
-			runCfg.MemberSampleCount = req.MemberSamples
-		}
-		if req.NonMemberSamples > 0 {
-			runCfg.NonMemberSampleCount = req.NonMemberSamples
-		}
-		if req.Workers > 0 {
-			runCfg.AuditWorkers = req.Workers
-		}
-		if req.MaxQueries > 0 {
-			runCfg.MaxQueries = req.MaxQueries
-		}
-		if req.MaxIterations > 0 {
-			runCfg.MaxIterations = req.MaxIterations
-		}
-		if req.NumEvals > 0 {
-			runCfg.NumEvals = req.NumEvals
+		if runCfg.Preset == "custom" {
+			if req.MemberSamples > 0 {
+				runCfg.MemberSampleCount = req.MemberSamples
+			}
+			if req.NonMemberSamples > 0 {
+				runCfg.NonMemberSampleCount = req.NonMemberSamples
+			}
+			if req.Workers > 0 {
+				runCfg.AuditWorkers = req.Workers
+			}
+			if req.MaxQueries > 0 {
+				runCfg.MaxQueries = req.MaxQueries
+			}
+			if req.MaxIterations > 0 {
+				runCfg.MaxIterations = req.MaxIterations
+			}
+			if req.NumEvals > 0 {
+				runCfg.NumEvals = req.NumEvals
+			}
 		}
 		runCfg.JSONReportPath = "output/web_audit_report.json"
 		runCfg.HTMLReportPath = "output/web_audit_report.html"
@@ -932,6 +934,7 @@ const webConsoleTemplate = `<!doctype html>
           <option value="extended">extended：扩展评估</option>
           <option value="custom">custom：自定义</option>
         </select>
+        <p class="hint" id="presetHint"></p>
         <label>审计模式</label>
         <select id="auditMode">
           <option value="full">Full：边界信号 + 影子模型信号</option>
@@ -994,21 +997,43 @@ const webConsoleTemplate = `<!doctype html>
     const $ = id => document.getElementById(id);
     const pct = v => (v * 100).toFixed(1) + '%';
     const num = v => Number(v || 0).toFixed(4);
+    const presetDefaults = {
+      smoke: {memberSamples: 1, nonMemberSamples: 1, workers: 2, maxQueries: 800, hint: '快速自检：1 个成员样本、1 个非成员样本，最大 800 次查询。'},
+      standard: {memberSamples: 50, nonMemberSamples: 50, workers: 20, maxQueries: 5000, hint: '常规评估：50 个成员样本、50 个非成员样本，最大 5000 次查询。'},
+      extended: {memberSamples: 100, nonMemberSamples: 100, workers: 20, maxQueries: 5000, hint: '扩展评估：100 个成员样本、100 个非成员样本，并使用更充分的校准样本。'}
+    };
+    const manualFieldIds = ['memberSamples', 'nonMemberSamples', 'workers', 'maxQueries'];
+    function syncPresetControls() {
+      const preset = $('preset').value;
+      const defaults = presetDefaults[preset];
+      if (defaults) {
+        $('memberSamples').value = defaults.memberSamples;
+        $('nonMemberSamples').value = defaults.nonMemberSamples;
+        $('workers').value = defaults.workers;
+        $('maxQueries').value = defaults.maxQueries;
+      }
+      const isCustom = preset === 'custom';
+      manualFieldIds.forEach(id => { $(id).disabled = !isCustom; });
+      $('presetHint').textContent = isCustom
+        ? '自定义模式：页面中的样本数、并发数和最大查询数会作为运行参数提交。'
+        : defaults.hint + ' 非 custom 模式下手动参数不会覆盖预设。';
+    }
     function payload() {
-      return {
+      const data = {
         audit_mode: $('auditMode').value,
         preset: $('preset').value,
         target_api: $('targetApi').value,
         shadow_api: $('shadowApi').value,
-        member_samples: Number($('memberSamples').value),
-        non_member_samples: Number($('nonMemberSamples').value),
-        workers: Number($('workers').value),
-        max_queries: Number($('maxQueries').value),
-        max_iterations: 8,
-        num_evals: 30,
         connector_mode: $('targetSource').value,
         external_api_hint: $('externalHint').value
       };
+      if ($('preset').value === 'custom') {
+        data.member_samples = Number($('memberSamples').value);
+        data.non_member_samples = Number($('nonMemberSamples').value);
+        data.workers = Number($('workers').value);
+        data.max_queries = Number($('maxQueries').value);
+      }
+      return data;
     }
     async function checkStatus() {
       const q = new URLSearchParams({target_api: $('targetApi').value, shadow_api: $('shadowApi').value, audit_mode: $('auditMode').value});
@@ -1044,6 +1069,8 @@ const webConsoleTemplate = `<!doctype html>
     $('statusBtn').addEventListener('click', checkStatus);
     $('runBtn').addEventListener('click', runAudit);
     $('auditMode').addEventListener('change', checkStatus);
+    $('preset').addEventListener('change', syncPresetControls);
+    syncPresetControls();
     checkStatus();
   </script>
 </body>
