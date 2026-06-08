@@ -116,6 +116,27 @@ http://127.0.0.1:18080
 ./scripts/stop_local_no_docker.sh
 ```
 
+如果同时使用 Cloudflare Tunnel 或需要自动拉起，建议使用统一服务脚本：
+
+```bash
+# 启动后端和 Cloudflare Tunnel
+./scripts/labelscan_service.sh start
+
+# 启动 watchdog，默认每 60 秒检查一次，掉线会自动拉起
+./scripts/labelscan_service.sh start-watchdog
+
+# 查看后端、Tunnel 和 watchdog 状态
+./scripts/labelscan_service.sh status
+
+# 手动关闭全部服务。若 watchdog 正在运行，必须用这个命令关闭
+./scripts/labelscan_service.sh stop
+
+# 手动重启全部服务
+./scripts/labelscan_service.sh restart
+```
+
+watchdog 日志默认写入 `output/labelscan-watchdog.log`。服务器重启后的自动恢复可以使用用户级 `crontab @reboot` 调用 `./scripts/labelscan_service.sh start-watchdog`，不需要 sudo。
+
 ## 快速开始
 
 推荐使用 Docker 运行。Windows、macOS 和 Linux 均可使用 Docker Desktop 或 Docker Engine；Windows 用户建议开启 WSL2 后端。

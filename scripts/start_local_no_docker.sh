@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-CONDA_BIN="${CONDA_BIN:-/home/shuaichao/miniconda3/bin/conda}"
+CONDA_BIN="${CONDA_BIN:-${HOME}/miniconda3/bin/conda}"
 ENV_NAME="${ENV_NAME:-labelscan}"
 ORACLE_HOST="${ORACLE_HOST:-127.0.0.1}"
 TARGET_PORT="${TARGET_PORT:-18000}"
@@ -31,7 +31,7 @@ start_service() {
 
 start_service \
   target-oracle \
-  "conda run -n ${ENV_NAME} env PORT=${TARGET_PORT} SERVICE_NAME=target-oracle" \
+  "conda run -n ${ENV_NAME} env .*PORT=${TARGET_PORT} .*SERVICE_NAME=target-oracle" \
   output/target-oracle.log \
   "$CONDA_BIN" run -n "$ENV_NAME" env \
     PORT="$TARGET_PORT" \
@@ -43,7 +43,7 @@ start_service \
 
 start_service \
   shadow-oracle \
-  "conda run -n ${ENV_NAME} env PORT=${SHADOW_PORT} SERVICE_NAME=shadow-oracle" \
+  "conda run -n ${ENV_NAME} env .*PORT=${SHADOW_PORT} .*SERVICE_NAME=shadow-oracle" \
   output/shadow-oracle.log \
   "$CONDA_BIN" run -n "$ENV_NAME" env \
     PORT="$SHADOW_PORT" \
