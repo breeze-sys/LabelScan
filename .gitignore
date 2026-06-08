@@ -9,5 +9,4 @@ __pycache__/
 Label-Only-MIA-Go
 *.test
 dist/
-output/web_audit_report.json
-output/web_audit_report.html
+output/

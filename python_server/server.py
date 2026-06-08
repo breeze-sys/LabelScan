@@ -172,5 +172,6 @@ if __name__ == "__main__":
     port_str = os.getenv("PORT", "8000") 
     port = int(port_str)
     
-    print(f"🚀 服务即将启动在端口: {port}")
-    uvicorn.run("server:app", host="0.0.0.0", port=port, reload=False)
+    host = os.getenv("ORACLE_HOST", "0.0.0.0")
+    print(f"🚀 服务即将启动在地址: {host}:{port}")
+    uvicorn.run("server:app", host=host, port=port, reload=False)

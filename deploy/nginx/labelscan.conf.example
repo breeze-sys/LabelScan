@@ -1,0 +1,43 @@
+limit_req_zone $binary_remote_addr zone=labelscan_ui:10m rate=10r/s;
+limit_req_zone $binary_remote_addr zone=labelscan_audit:10m rate=1r/m;
+
+server {
+    listen 80;
+    server_name labelscan.your-domain.com;
+
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name labelscan.your-domain.com;
+
+    ssl_certificate /etc/letsencrypt/live/labelscan.your-domain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/labelscan.your-domain.com/privkey.pem;
+
+    auth_basic "LabelScan-Go";
+    auth_basic_user_file /etc/nginx/.htpasswd-labelscan;
+
+    client_max_body_size 20m;
+    proxy_connect_timeout 10s;
+    proxy_send_timeout 3600s;
+    proxy_read_timeout 3600s;
+
+    location /api/audit {
+        limit_req zone=labelscan_audit burst=2 nodelay;
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        limit_req zone=labelscan_ui burst=30 nodelay;
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

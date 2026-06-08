@@ -26,6 +26,96 @@ Label-Only-MIA-Go 的理论基础来源于 ACM CCS 2021 论文 *Membership Leaka
 
 选择 Go 重写核心审计流程，主要是因为边界搜索和批量审计包含大量独立 HTTP 请求。Go 的 goroutine 和 worker pool 能较自然地处理高并发网络 I/O，也更适合把攻击流程、模型客户端、数据读取和报告输出拆成可维护的工程模块。Python 继续承担模型加载和训练相关工作，以保留 PyTorch 生态的便利性。
 
+## 服务器部署与 Windows 启动器
+
+如果要做“后端在服务器运行、用户只拿 Windows exe”的交付方式，推荐把本仓库部署为服务器端 Docker 服务，再让 exe 只打开受保护的 HTTPS 控制台。
+
+### 服务器端
+
+生产环境建议使用后台启动：
+
+```bash
+docker compose up -d --build
+```
+
+当前 Compose 只把 Web 控制台映射到宿主机 `127.0.0.1:8080`，Target Oracle `8000` 和 Shadow Oracle `8001` 只在 Docker 内网暴露，避免模型推理服务直接进入公网。若只是临时用服务器 IP 调试 Web 页面，可以显式放开 Web 绑定：
+
+```bash
+HOST_WEB_BIND=0.0.0.0 docker compose up -d --build
+```
+
+正式上线建议仍保持只监听 `127.0.0.1`，再由 Cloudflare Tunnel 或 Nginx 对外提供 HTTPS。Nginx 示例配置见 `deploy/nginx/labelscan.conf.example`，包含 HTTPS 反向代理、Basic Auth 和 `/api/audit` 限流。若改用该 Nginx 模板，部署时把模板里的 `labelscan.your-domain.com` 替换为 `labelscan.site` 或你的真实域名，并创建 Basic Auth 用户文件：
+
+```bash
+sudo htpasswd -c /etc/nginx/.htpasswd-labelscan labelscan
+```
+
+### Windows 启动器
+
+最小可交付 exe 是纯 Go 启动器，不内置 Docker、Python、模型权重或审计逻辑，只负责打开服务器上的 Web 控制台。构建命令：
+
+```bash
+./scripts/build_windows_launcher.sh https://labelscan.site
+```
+
+生成文件：
+
+```text
+dist/LabelScan-Go.exe
+dist/labelscan.url
+```
+
+`labelscan.url` 放在 exe 同目录时会覆盖编译时默认地址，所以更换域名时可以直接改这个文件。若已经确定长期域名，也可以把域名作为脚本第一个参数重新构建 exe。
+
+### 无 sudo / 免 Docker 本地运行
+
+如果服务器账号没有 sudo 权限，也没有 Docker daemon 访问权限，可以使用 Conda 环境直接运行三段服务。当前服务器是 Blackwell GPU，推荐安装 PyTorch CUDA 13.0 wheel：
+
+```bash
+conda create -y -n labelscan --override-channels -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge python=3.11 pip go
+conda run -n labelscan python -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple fastapi==0.115.6 'uvicorn[standard]==0.34.0' numpy==1.26.4
+conda run -n labelscan python -m pip install --index-url https://download.pytorch.org/whl/cu130 --extra-index-url https://pypi.tuna.tsinghua.edu.cn/simple torch==2.12.0+cu130 torchvision==0.27.0+cu130
+conda run -n labelscan python -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple numpy==1.26.4
+```
+
+启动本地服务：
+
+```bash
+./scripts/start_local_no_docker.sh
+```
+
+默认使用物理 GPU 0 运行 Target Oracle 和 Shadow Oracle，适合共享服务器上避开其他用户任务。需要拆到两张空闲 GPU 时可以覆盖环境变量：
+
+```bash
+TARGET_CUDA_VISIBLE_DEVICES=0 SHADOW_CUDA_VISIBLE_DEVICES=1 ./scripts/start_local_no_docker.sh
+```
+
+默认端口只监听服务器本机，不对公网开放：
+
+```text
+Target Oracle: http://127.0.0.1:18000
+Shadow Oracle: http://127.0.0.1:18001
+Web console: http://127.0.0.1:18080
+```
+
+Windows 端使用 SSH 隧道访问：
+
+```bash
+ssh -N -L 18080:127.0.0.1:18080 <user>@<server>
+```
+
+然后打开：
+
+```text
+http://127.0.0.1:18080
+```
+
+停止服务：
+
+```bash
+./scripts/stop_local_no_docker.sh
+```
+
 ## 快速开始
 
 推荐使用 Docker 运行。Windows、macOS 和 Linux 均可使用 Docker Desktop 或 Docker Engine；Windows 用户建议开启 WSL2 后端。
