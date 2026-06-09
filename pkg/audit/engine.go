@@ -1,6 +1,8 @@
 package audit
 
 import (
+	"context"
+
 	"Label-Only-MIA-Go/pkg/core"
 	"Label-Only-MIA-Go/pkg/mathutils"
 	"sync"
@@ -39,6 +41,10 @@ func NewEngine(t AuditThresholds, s, tg core.Model, atk core.Attacker) *Engine {
 }
 
 func (e *Engine) AuditSample(sample core.Sample) core.AuditResult {
+	return e.AuditSampleContext(context.Background(), sample)
+}
+
+func (e *Engine) AuditSampleContext(ctx context.Context, sample core.Sample) core.AuditResult {
 	res := core.AuditResult{
 		SampleID:     sample.ID,
 		Label:        sample.Label,
@@ -49,7 +55,7 @@ func (e *Engine) AuditSample(sample core.Sample) core.AuditResult {
 	// 1. 预校验：探测目标模型对原图的初始反应
 	// ---------------------------------------------------------
 	tmpOrig := core.Sample{Data: sample.Data, Label: sample.Label}
-	origAtk := e.attacker.Attack(tmpOrig, e.target)
+	origAtk := attackContext(ctx, e.attacker, tmpOrig, e.target)
 
 	// 如果模型连原图都预测错了，当前证据不足以支持成员风险判断。
 	if origAtk.Distance < 1e-6 {
@@ -64,10 +70,10 @@ func (e *Engine) AuditSample(sample core.Sample) core.AuditResult {
 	// 2. 方案一信号：行为指纹 (影子模型判定)
 	// ---------------------------------------------------------
 	// 获取目标模型当前的真实预测，作为影子模型对比的基准
-	targetPred, _ := e.target.Predict(sample.Data)
+	targetPred, _ := predictContext(ctx, e.target, sample.Data)
 	sample.TargetLabel = targetPred
 
-	logits, _ := e.shadow.PredictLogits(sample.Data)
+	logits, _ := predictLogitsContext(ctx, e.shadow, sample.Data)
 	probs := mathutils.Softmax(logits)
 	loss := mathutils.CrossEntropy(probs, sample.Label)
 	res.ShadowLoss = loss
@@ -91,7 +97,7 @@ func (e *Engine) AuditSample(sample core.Sample) core.AuditResult {
 	// 3. 方案二信号：几何指纹 (边界稳定性判定)
 	// ---------------------------------------------------------
 	variants := mathutils.GenerateVariants(sample.Data, 0.001, 10)
-	otherDists := e.probeAll(variants, sample.Label)
+	otherDists := e.probeAllContext(ctx, variants, sample.Label)
 	allDists := append([]float64{origAtk.Distance}, otherDists...)
 
 	dBar, std := mathutils.MeanAndStd(allDists)
@@ -122,6 +128,10 @@ func (e *Engine) AuditSample(sample core.Sample) core.AuditResult {
 
 // 辅助函数微调：去掉原图合并，只跑变体
 func (e *Engine) probeAll(variants [][]float32, label int) []float64 {
+	return e.probeAllContext(context.Background(), variants, label)
+}
+
+func (e *Engine) probeAllContext(ctx context.Context, variants [][]float32, label int) []float64 {
 	dists := make([]float64, len(variants))
 	var wg sync.WaitGroup
 	for i, img := range variants {
@@ -129,12 +139,45 @@ func (e *Engine) probeAll(variants [][]float32, label int) []float64 {
 		go func(idx int, targetImg []float32) {
 			defer wg.Done()
 			tmp := core.Sample{Data: targetImg, Label: label}
-			atkRes := e.attacker.Attack(tmp, e.target)
+			if ctx.Err() != nil {
+				return
+			}
+			atkRes := attackContext(ctx, e.attacker, tmp, e.target)
 			dists[idx] = atkRes.Distance
 		}(i, img)
 	}
 	wg.Wait()
 	return dists
+}
+
+func attackContext(ctx context.Context, attacker core.Attacker, sample core.Sample, model core.Model) core.AttackResult {
+	if a, ok := attacker.(core.ContextAttacker); ok {
+		return a.AttackContext(ctx, sample, model)
+	}
+	if ctx.Err() != nil {
+		return core.AttackResult{SampleID: sample.ID}
+	}
+	return attacker.Attack(sample, model)
+}
+
+func predictContext(ctx context.Context, model core.Model, img core.Image) (int, error) {
+	if m, ok := model.(core.ContextModel); ok {
+		return m.PredictContext(ctx, img)
+	}
+	if ctx.Err() != nil {
+		return -1, ctx.Err()
+	}
+	return model.Predict(img)
+}
+
+func predictLogitsContext(ctx context.Context, model core.Model, img core.Image) ([]float32, error) {
+	if m, ok := model.(core.ContextModel); ok {
+		return m.PredictLogitsContext(ctx, img)
+	}
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+	return model.PredictLogits(img)
 }
 
 func (e *Engine) fusionLogic(s1, s2 string) string {

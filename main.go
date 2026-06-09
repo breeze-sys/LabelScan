@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	"Label-Only-MIA-Go/pkg/attack"
 	"Label-Only-MIA-Go/pkg/audit"
 	"Label-Only-MIA-Go/pkg/client"
@@ -314,6 +316,10 @@ func loadThresholds(path string) (audit.AuditThresholds, error) {
 }
 
 func calibrateThresholds(cfg runConfig, thresholds *audit.AuditThresholds, hsja *attack.HSJA, targetModel *client.HTTPClient) error {
+	return calibrateThresholdsContext(context.Background(), cfg, thresholds, hsja, targetModel)
+}
+
+func calibrateThresholdsContext(ctx context.Context, cfg runConfig, thresholds *audit.AuditThresholds, hsja *attack.HSJA, targetModel *client.HTTPClient) error {
 	fmt.Printf("\n[1/4] Calibrating geometry signal with %d reference samples\n", cfg.CalibrationTargetCount)
 	loader := &dataset.CifarLoader{}
 	candidates, err := loader.GetRandomStrangers(cfg.CalibrationDataPath, cfg.CalibrationCandidateCount)
@@ -324,8 +330,11 @@ func calibrateThresholds(cfg runConfig, thresholds *audit.AuditThresholds, hsja 
 	var refDists [][]float64
 	validStrangers := 0
 	for i := 0; i < len(candidates) && validStrangers < cfg.CalibrationTargetCount; i++ {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 		s := candidates[i]
-		resOrig := hsja.Attack(core.Sample{Data: s.Data, Label: s.Label}, targetModel)
+		resOrig := hsja.AttackContext(ctx, core.Sample{Data: s.Data, Label: s.Label}, targetModel)
 		if resOrig.Distance < 1e-5 {
 			continue
 		}
@@ -334,7 +343,10 @@ func calibrateThresholds(cfg runConfig, thresholds *audit.AuditThresholds, hsja 
 		points := append([][]float32{s.Data}, variants...)
 		groupDists := make([]float64, 0, len(points))
 		for _, img := range points {
-			res := hsja.Attack(core.Sample{Data: img, Label: s.Label}, targetModel)
+			if err := ctx.Err(); err != nil {
+				return err
+			}
+			res := hsja.AttackContext(ctx, core.Sample{Data: img, Label: s.Label}, targetModel)
 			groupDists = append(groupDists, res.Distance)
 		}
 		refDists = append(refDists, groupDists)
@@ -474,6 +486,10 @@ func buildReport(cfg runConfig, thresholds audit.AuditThresholds, results []core
 }
 
 func runAudit(cfg runConfig) (auditReport, error) {
+	return runAuditContext(context.Background(), cfg)
+}
+
+func runAuditContext(ctx context.Context, cfg runConfig) (auditReport, error) {
 	mode, err := normalizeAuditMode(cfg.AuditMode)
 	if err != nil {
 		return auditReport{}, err
@@ -495,7 +511,10 @@ func runAudit(cfg runConfig) (auditReport, error) {
 		NumEvals:      cfg.NumEvals,
 	})
 
-	if err := calibrateThresholds(cfg, &thresholds, hsja, targetModel); err != nil {
+	if err := calibrateThresholdsContext(ctx, cfg, &thresholds, hsja, targetModel); err != nil {
+		return auditReport{}, err
+	}
+	if err := ctx.Err(); err != nil {
 		return auditReport{}, err
 	}
 	samples, err := loadAuditSamples(cfg)
@@ -505,7 +524,10 @@ func runAudit(cfg runConfig) (auditReport, error) {
 
 	if cfg.AuditMode == "boundary-only" {
 		fmt.Printf("\n[3/4] Running boundary-only audit with %d workers\n", cfg.AuditWorkers)
-		results := runBoundaryOnlySamples(samples, cfg, thresholds, hsja, targetModel)
+		results := runBoundaryOnlySamplesContext(ctx, samples, cfg, thresholds, hsja, targetModel)
+		if err := ctx.Err(); err != nil {
+			return auditReport{}, err
+		}
 		return buildReport(cfg, thresholds, results), nil
 	}
 
@@ -513,11 +535,18 @@ func runAudit(cfg runConfig) (auditReport, error) {
 	shadowModel := client.NewHTTPClient(cfg.ShadowAPI)
 	engine := audit.NewEngine(thresholds, shadowModel, targetModel, hsja)
 	pool := worker.NewAuditPool(engine, cfg.AuditWorkers)
-	results := pool.RunAudit(samples)
+	results := pool.RunAuditContext(ctx, samples)
+	if err := ctx.Err(); err != nil {
+		return auditReport{}, err
+	}
 	return buildReport(cfg, thresholds, results), nil
 }
 
 func runBoundaryOnlySamples(samples []core.Sample, cfg runConfig, thresholds audit.AuditThresholds, hsja *attack.HSJA, targetModel *client.HTTPClient) []core.AuditResult {
+	return runBoundaryOnlySamplesContext(context.Background(), samples, cfg, thresholds, hsja, targetModel)
+}
+
+func runBoundaryOnlySamplesContext(ctx context.Context, samples []core.Sample, cfg runConfig, thresholds audit.AuditThresholds, hsja *attack.HSJA, targetModel *client.HTTPClient) []core.AuditResult {
 	workerCount := cfg.AuditWorkers
 	if workerCount < 1 {
 		workerCount = 1
@@ -535,13 +564,26 @@ func runBoundaryOnlySamples(samples []core.Sample, cfg runConfig, thresholds aud
 		go func() {
 			defer wg.Done()
 			for sample := range jobs {
-				results <- auditBoundaryOnlySample(sample, thresholds, hsja, targetModel)
+				if ctx.Err() != nil {
+					return
+				}
+				result := auditBoundaryOnlySampleContext(ctx, sample, thresholds, hsja, targetModel)
+				select {
+				case results <- result:
+				case <-ctx.Done():
+					return
+				}
 			}
 		}()
 	}
 
+queueLoop:
 	for _, sample := range samples {
-		jobs <- sample
+		select {
+		case jobs <- sample:
+		case <-ctx.Done():
+			break queueLoop
+		}
 	}
 	close(jobs)
 	wg.Wait()
@@ -555,13 +597,17 @@ func runBoundaryOnlySamples(samples []core.Sample, cfg runConfig, thresholds aud
 }
 
 func auditBoundaryOnlySample(sample core.Sample, thresholds audit.AuditThresholds, hsja *attack.HSJA, targetModel *client.HTTPClient) core.AuditResult {
+	return auditBoundaryOnlySampleContext(context.Background(), sample, thresholds, hsja, targetModel)
+}
+
+func auditBoundaryOnlySampleContext(ctx context.Context, sample core.Sample, thresholds audit.AuditThresholds, hsja *attack.HSJA, targetModel *client.HTTPClient) core.AuditResult {
 	res := core.AuditResult{
 		SampleID:     sample.ID,
 		Label:        sample.Label,
 		IsMemberTrue: sample.IsMember,
 	}
 
-	origAtk := hsja.Attack(core.Sample{Data: sample.Data, Label: sample.Label}, targetModel)
+	origAtk := hsja.AttackContext(ctx, core.Sample{Data: sample.Data, Label: sample.Label}, targetModel)
 	if origAtk.Distance < 1e-6 {
 		res.MeanDistance = 0
 		res.VolatilityCV = 99.0
@@ -578,7 +624,10 @@ func auditBoundaryOnlySample(sample core.Sample, thresholds audit.AuditThreshold
 		wg.Add(1)
 		go func(idx int, variant core.Image) {
 			defer wg.Done()
-			atkRes := hsja.Attack(core.Sample{Data: variant, Label: sample.Label}, targetModel)
+			if ctx.Err() != nil {
+				return
+			}
+			atkRes := hsja.AttackContext(ctx, core.Sample{Data: variant, Label: sample.Label}, targetModel)
 			dists[idx+1] = atkRes.Distance
 		}(i, img)
 	}
@@ -682,18 +731,24 @@ func checkHealth(name, baseURL string) serviceHealth {
 }
 
 type auditJob struct {
-	ID         string       `json:"id"`
-	Status     string       `json:"status"`
-	Error      string       `json:"error,omitempty"`
-	Report     *auditReport `json:"report,omitempty"`
-	CreatedAt  string       `json:"created_at"`
-	StartedAt  string       `json:"started_at,omitempty"`
-	FinishedAt string       `json:"finished_at,omitempty"`
+	ID            string       `json:"id"`
+	Status        string       `json:"status"`
+	QueuePosition int          `json:"queue_position,omitempty"`
+	Error         string       `json:"error,omitempty"`
+	Report        *auditReport `json:"report,omitempty"`
+	CreatedAt     string       `json:"created_at"`
+	StartedAt     string       `json:"started_at,omitempty"`
+	FinishedAt    string       `json:"finished_at,omitempty"`
+
+	runCfg runConfig          `json:"-"`
+	ctx    context.Context    `json:"-"`
+	cancel context.CancelFunc `json:"-"`
 }
 
 type auditJobStore struct {
 	mu      sync.Mutex
 	jobs    map[string]*auditJob
+	queue   []string
 	running string
 	nextID  int64
 }
@@ -702,60 +757,134 @@ func newAuditJobStore() *auditJobStore {
 	return &auditJobStore{jobs: make(map[string]*auditJob)}
 }
 
-func (s *auditJobStore) start(runCfg runConfig) (*auditJob, error) {
+func (s *auditJobStore) enqueue(runCfg runConfig) auditJob {
 	s.mu.Lock()
-	if s.running != "" {
-		active := s.running
-		s.mu.Unlock()
-		return nil, fmt.Errorf("another audit job is already running: %s", active)
-	}
+	defer s.mu.Unlock()
+
 	s.nextID++
+	ctx, cancel := context.WithCancel(context.Background())
 	job := &auditJob{
 		ID:        fmt.Sprintf("audit-%d", s.nextID),
-		Status:    "running",
+		Status:    "queued",
 		CreatedAt: time.Now().Format(time.RFC3339),
-		StartedAt: time.Now().Format(time.RFC3339),
+		runCfg:    runCfg,
+		ctx:       ctx,
+		cancel:    cancel,
 	}
 	s.jobs[job.ID] = job
-	s.running = job.ID
-	s.mu.Unlock()
+	s.queue = append(s.queue, job.ID)
+	s.launchNextLocked()
+	return s.snapshotLocked(job.ID)
+}
 
-	go func() {
-		report, err := runAudit(runCfg)
-		if err == nil {
-			err = writeJSONReport(runCfg.JSONReportPath, report)
+func (s *auditJobStore) launchNextLocked() {
+	if s.running != "" {
+		return
+	}
+	for len(s.queue) > 0 {
+		id := s.queue[0]
+		s.queue = s.queue[1:]
+		job := s.jobs[id]
+		if job == nil || job.Status != "queued" {
+			continue
 		}
-		if err == nil {
-			err = writeHTMLReport(runCfg.HTMLReportPath, report)
-		}
+		job.Status = "running"
+		job.StartedAt = time.Now().Format(time.RFC3339)
+		s.running = job.ID
+		go s.run(job)
+		return
+	}
+}
 
-		s.mu.Lock()
-		defer s.mu.Unlock()
+func (s *auditJobStore) run(job *auditJob) {
+	report, err := runAuditContext(job.ctx, job.runCfg)
+	if err == nil && job.ctx.Err() == nil {
+		err = writeJSONReport(job.runCfg.JSONReportPath, report)
+	}
+	if err == nil && job.ctx.Err() == nil {
+		err = writeHTMLReport(job.runCfg.HTMLReportPath, report)
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	job.FinishedAt = time.Now().Format(time.RFC3339)
+	switch {
+	case job.ctx.Err() == context.Canceled:
+		job.Status = "canceled"
+		job.Error = "audit job canceled"
+	case err != nil:
+		job.Status = "failed"
+		job.Error = err.Error()
+	default:
+		job.Status = "succeeded"
+		job.Report = &report
+	}
+	if s.running == job.ID {
+		s.running = ""
+	}
+	s.launchNextLocked()
+}
+
+func (s *auditJobStore) cancel(id string) (auditJob, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	job, ok := s.jobs[id]
+	if !ok {
+		return auditJob{}, false
+	}
+	switch job.Status {
+	case "queued":
+		job.cancel()
+		job.Status = "canceled"
+		job.Error = "audit job canceled"
 		job.FinishedAt = time.Now().Format(time.RFC3339)
-		if err != nil {
-			job.Status = "failed"
-			job.Error = err.Error()
-		} else {
-			job.Status = "succeeded"
-			job.Report = &report
-		}
-		if s.running == job.ID {
-			s.running = ""
-		}
-	}()
+		s.removeQueuedLocked(id)
+	case "running", "canceling":
+		job.cancel()
+		job.Status = "canceling"
+	case "succeeded", "failed", "canceled":
+		// Already final; return the current snapshot.
+	}
+	return s.snapshotLocked(id), true
+}
 
-	return job, nil
+func (s *auditJobStore) removeQueuedLocked(id string) {
+	filtered := s.queue[:0]
+	for _, queuedID := range s.queue {
+		if queuedID != id {
+			filtered = append(filtered, queuedID)
+		}
+	}
+	s.queue = filtered
 }
 
 func (s *auditJobStore) snapshot(id string) (auditJob, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	job, ok := s.jobs[id]
+	_, ok := s.jobs[id]
 	if !ok {
 		return auditJob{}, false
 	}
+	return s.snapshotLocked(id), true
+}
+
+func (s *auditJobStore) snapshotLocked(id string) auditJob {
+	job := s.jobs[id]
 	copy := *job
-	return copy, true
+	copy.runCfg = runConfig{}
+	copy.ctx = nil
+	copy.cancel = nil
+	copy.QueuePosition = 0
+	if copy.Status == "queued" {
+		for i, queuedID := range s.queue {
+			if queuedID == id {
+				copy.QueuePosition = i + 1
+				break
+			}
+		}
+	}
+	return copy
 }
 
 func buildAuditRunConfig(base runConfig, req auditRequest) (runConfig, error) {
@@ -881,6 +1010,24 @@ func startWebServer(cfg runConfig, addr string) error {
 		writeJSON(w, job, http.StatusOK)
 	})
 
+	mux.HandleFunc("/api/audit/cancel", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		id := r.URL.Query().Get("id")
+		if id == "" {
+			writeJSON(w, map[string]string{"error": "missing job id"}, http.StatusBadRequest)
+			return
+		}
+		job, ok := auditJobs.cancel(id)
+		if !ok {
+			writeJSON(w, map[string]string{"error": "audit job not found"}, http.StatusNotFound)
+			return
+		}
+		writeJSON(w, job, http.StatusOK)
+	})
+
 	mux.HandleFunc("/api/audit", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -896,12 +1043,8 @@ func startWebServer(cfg runConfig, addr string) error {
 			writeJSON(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
 			return
 		}
-		job, err := auditJobs.start(runCfg)
-		if err != nil {
-			writeJSON(w, map[string]string{"error": err.Error()}, http.StatusConflict)
-			return
-		}
-		writeJSON(w, map[string]string{"job_id": job.ID, "status": job.Status}, http.StatusAccepted)
+		job := auditJobs.enqueue(runCfg)
+		writeJSON(w, job, http.StatusAccepted)
 	})
 
 	mux.HandleFunc("/reports/latest.html", func(w http.ResponseWriter, r *http.Request) {
@@ -1067,6 +1210,7 @@ const webConsoleTemplate = `<!doctype html>
         <button class="primary" id="runBtn">运行风险评估</button>
         <div class="split">
           <button class="secondary" id="statusBtn">检查服务状态</button>
+          <button class="secondary" id="cancelBtn" style="display:none;">取消当前任务</button>
           <a id="reportLink" href="/reports/latest.html" target="_blank" style="display:none;">打开 HTML 报告</a>
         </div>
         <div class="status" id="status"></div>
@@ -1110,6 +1254,7 @@ const webConsoleTemplate = `<!doctype html>
       extended: {memberSamples: 100, nonMemberSamples: 100, workers: 20, maxQueries: 5000, hint: '扩展评估：100 个成员样本、100 个非成员样本，并使用更充分的校准样本。'}
     };
     const manualFieldIds = ['memberSamples', 'nonMemberSamples', 'workers', 'maxQueries'];
+    let currentJobId = '';
     function syncPresetControls() {
       const preset = $('preset').value;
       const defaults = presetDefaults[preset];
@@ -1175,35 +1320,62 @@ const webConsoleTemplate = `<!doctype html>
       $('log').textContent = JSON.stringify(data.metrics, null, 2);
       $('reportLink').style.display = 'inline';
     }
+    function jobMessage(job) {
+      if (job.status === 'queued') return '任务 '+job.id+' 正在排队，队列位置：'+(job.queue_position || '--');
+      if (job.status === 'running') return '任务 '+job.id+' 正在运行。开始时间：'+(job.started_at || job.created_at || '--');
+      if (job.status === 'canceling') return '任务 '+job.id+' 正在取消，等待当前模型请求返回。';
+      return '任务 '+job.id+' 状态：'+job.status;
+    }
     async function waitForAudit(jobId) {
       for (;;) {
         await sleep(3000);
         const q = new URLSearchParams({id: jobId});
         const job = await readJSON(await fetch('/api/audit/status?' + q.toString(), {cache:'no-store'}));
         if (job.status === 'failed') throw new Error(job.error || 'audit failed');
+        if (job.status === 'canceled') throw new Error('任务已取消');
         if (job.status === 'succeeded') {
           renderAudit(job.report);
           return;
         }
-        $('log').textContent = '任务 '+jobId+' 正在运行。开始时间：'+(job.started_at || job.created_at || '--');
+        $('log').textContent = jobMessage(job);
+      }
+    }
+    async function cancelAudit() {
+      if (!currentJobId) return;
+      $('cancelBtn').disabled = true;
+      try {
+        const q = new URLSearchParams({id: currentJobId});
+        const job = await readJSON(await fetch('/api/audit/cancel?' + q.toString(), {method:'POST'}));
+        $('log').textContent = jobMessage(job);
+      } catch (err) {
+        $('log').textContent = err.message;
+      } finally {
+        $('cancelBtn').disabled = false;
       }
     }
     async function runAudit() {
       $('runBtn').disabled = true;
+      $('cancelBtn').style.display = 'inline-flex';
+      $('cancelBtn').disabled = false;
       $('log').textContent = '风险评估任务提交中。长任务会在服务器后台运行，页面会自动刷新进度。';
       $('reportLink').style.display = 'none';
       try {
         const res = await fetch('/api/audit', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload())});
         const job = await readJSON(res);
-        $('log').textContent = '任务 '+job.job_id+' 已提交，等待服务器完成审计。';
-        await waitForAudit(job.job_id);
+        currentJobId = job.id || job.job_id;
+        $('log').textContent = jobMessage(job);
+        await waitForAudit(currentJobId);
       } catch (err) {
         $('log').textContent = err.message;
       } finally {
+        currentJobId = '';
         $('runBtn').disabled = false;
+        $('cancelBtn').disabled = false;
+        $('cancelBtn').style.display = 'none';
       }
     }
     $('statusBtn').addEventListener('click', checkStatus);
+    $('cancelBtn').addEventListener('click', cancelAudit);
     $('runBtn').addEventListener('click', runAudit);
     $('auditMode').addEventListener('change', checkStatus);
     $('preset').addEventListener('change', syncPresetControls);

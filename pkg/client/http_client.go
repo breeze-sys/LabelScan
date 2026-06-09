@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -69,13 +70,21 @@ func NewHTTPClient(baseURL string) *HTTPClient {
 
 // Predict: 获取最终标签
 func (c *HTTPClient) Predict(img core.Image) (int, error) {
-	// 注意：根据 A 的接口规范，单图预测通常在 /predict 路径
-	endpoint := c.url + "/predict"
+	return c.PredictContext(context.Background(), img)
+}
 
+func (c *HTTPClient) PredictContext(ctx context.Context, img core.Image) (int, error) {
+	endpoint := c.url + "/predict"
 	payload := requestBody{Image: img}
 	jsonData, _ := json.Marshal(payload)
 
-	resp, err := c.httpClient.Post(endpoint, "application/json", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return -1, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return -1, err
 	}
@@ -90,13 +99,21 @@ func (c *HTTPClient) Predict(img core.Image) (int, error) {
 
 // PredictLogits: 获取原始分数 (用于算方案一的 Loss) —— 【这是你最需要的改动】
 func (c *HTTPClient) PredictLogits(img core.Image) ([]float32, error) {
-	// 注意：路径设为 /predict_logits
-	endpoint := c.url + "/predict_logits"
+	return c.PredictLogitsContext(context.Background(), img)
+}
 
+func (c *HTTPClient) PredictLogitsContext(ctx context.Context, img core.Image) ([]float32, error) {
+	endpoint := c.url + "/predict_logits"
 	payload := requestBody{Image: img}
 	jsonData, _ := json.Marshal(payload)
 
-	resp, err := c.httpClient.Post(endpoint, "application/json", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -115,6 +132,10 @@ func (c *HTTPClient) PredictLogits(img core.Image) ([]float32, error) {
 
 // PredictBatch: 批量预测标签 (用于 HSJA 涡轮增压)
 func (c *HTTPClient) PredictBatch(imgs []core.Image) ([]int, error) {
+	return c.PredictBatchContext(context.Background(), imgs)
+}
+
+func (c *HTTPClient) PredictBatchContext(ctx context.Context, imgs []core.Image) ([]int, error) {
 	if len(imgs) == 0 {
 		return []int{}, nil
 	}
@@ -126,11 +147,15 @@ func (c *HTTPClient) PredictBatch(imgs []core.Image) ([]int, error) {
 
 	payload := batchRequest{Images: rawImgs}
 	jsonData, _ := json.Marshal(payload)
-
-	// 路径设为 /predict_batch
 	batchURL := c.url + "/predict_batch"
 
-	resp, err := c.httpClient.Post(batchURL, "application/json", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, batchURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

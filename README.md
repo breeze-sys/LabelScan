@@ -137,6 +137,8 @@ http://127.0.0.1:18080
 
 watchdog 日志默认写入 `output/labelscan-watchdog.log`。服务器重启后的自动恢复可以使用用户级 `crontab @reboot` 调用 `./scripts/labelscan_service.sh start-watchdog`，不需要 sudo。
 
+Web 控制台的审计任务采用队列模式：同时只运行一个任务，其余任务排队等待。页面中的“取消当前任务”按钮可以取消自己提交的排队任务；若任务正在运行，后端会向审计流程发送取消信号，并在当前模型请求返回后尽快停止。
+
 ## 快速开始
 
 推荐使用 Docker 运行。Windows、macOS 和 Linux 均可使用 Docker Desktop 或 Docker Engine；Windows 用户建议开启 WSL2 后端。

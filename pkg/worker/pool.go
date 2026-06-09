@@ -1,6 +1,8 @@
 package worker
 
 import (
+	"context"
+
 	"Label-Only-MIA-Go/pkg/audit"
 	"Label-Only-MIA-Go/pkg/core"
 	"fmt"
@@ -24,6 +26,10 @@ func NewAuditPool(e *audit.Engine, count int) *AuditPool {
 // 输入: 1000 个待审计样本
 // 输出: 1000 个带红绿灯结论的审计报告
 func (p *AuditPool) RunAudit(samples []core.Sample) []core.AuditResult {
+	return p.RunAuditContext(context.Background(), samples)
+}
+
+func (p *AuditPool) RunAuditContext(ctx context.Context, samples []core.Sample) []core.AuditResult {
 	var wg sync.WaitGroup
 
 	// 1. 创建任务通道和结果通道
@@ -39,22 +45,34 @@ func (p *AuditPool) RunAudit(samples []core.Sample) []core.AuditResult {
 		go func(workerID int) {
 			defer wg.Done()
 			for s := range jobs {
+				if ctx.Err() != nil {
+					return
+				}
 				// 核心变动：调用我们的 engine 执行全流程审计（Loss + 距离 + 判决）
-				res := p.Engine.AuditSample(s)
+				res := p.Engine.AuditSampleContext(ctx, s)
 
 				// 打印一下实时进度，方便总指挥监控
 				if s.ID%50 == 0 {
 					fmt.Printf("[Worker %d] 正在处理样本 #%d...\n", workerID, s.ID)
 				}
 
-				resultsChan <- res
+				select {
+				case resultsChan <- res:
+				case <-ctx.Done():
+					return
+				}
 			}
 		}(i)
 	}
 
 	// 3. 塞入任务数据
+queueLoop:
 	for _, s := range samples {
-		jobs <- s
+		select {
+		case jobs <- s:
+		case <-ctx.Done():
+			break queueLoop
+		}
 	}
 	close(jobs) // 塞完任务记得关门，否则工人会一直死等
 

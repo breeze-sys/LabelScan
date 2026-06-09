@@ -1,5 +1,7 @@
 package core
 
+import "context"
+
 // ==========================================
 // 1. 全局配置与常量
 // ==========================================
@@ -69,7 +71,21 @@ type Model interface {
 	GetInputSize() int
 }
 
+// ContextModel is an optional extension for models that can cancel in-flight requests.
+type ContextModel interface {
+	Model
+	PredictContext(ctx context.Context, img Image) (int, error)
+	PredictBatchContext(ctx context.Context, imgs []Image) ([]int, error)
+	PredictLogitsContext(ctx context.Context, img Image) ([]float32, error)
+}
+
 // Attacker 接口
 type Attacker interface {
 	Attack(sample Sample, model Model) AttackResult
+}
+
+// ContextAttacker is an optional extension for attacks that can stop early.
+type ContextAttacker interface {
+	Attacker
+	AttackContext(ctx context.Context, sample Sample, model Model) AttackResult
 }

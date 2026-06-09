@@ -10,6 +10,10 @@ TUNNEL_CONFIG="${TUNNEL_CONFIG:-${HOME}/.cloudflared/labelscan-go.yml}"
 TUNNEL_NAME="${TUNNEL_NAME:-labelscan-go}"
 LOCAL_HEALTH_URL="${LOCAL_HEALTH_URL:-http://127.0.0.1:18080/api/status?audit_mode=full&target_api=http://127.0.0.1:18000&shadow_api=http://127.0.0.1:18001}"
 PUBLIC_HEALTH_URL="${PUBLIC_HEALTH_URL:-https://labelscan.site/api/status}"
+CURL_BIN="${CURL_BIN:-/usr/bin/curl}"
+if [ ! -x "$CURL_BIN" ]; then
+  CURL_BIN="curl"
+fi
 
 mkdir -p "$LOG_DIR"
 
@@ -35,7 +39,7 @@ watchdog_pattern() {
 }
 
 is_healthy() {
-  curl -fsS --max-time 20 "$1" >/dev/null 2>&1
+  "$CURL_BIN" -fsS --max-time 20 "$1" >/dev/null 2>&1
 }
 
 start_backend() {

@@ -1,6 +1,8 @@
 package attack
 
 import (
+	"context"
+
 	"Label-Only-MIA-Go/pkg/core"
 	"Label-Only-MIA-Go/pkg/mathutils"
 	"math"
@@ -40,19 +42,28 @@ func NewHSJA(cfg HSJAConfig) *HSJA {
 
 // Attack estimates the distance from a sample to the target model decision boundary.
 func (atk *HSJA) Attack(sample core.Sample, model core.Model) core.AttackResult {
+	return atk.AttackContext(context.Background(), sample, model)
+}
+
+func (atk *HSJA) AttackContext(ctx context.Context, sample core.Sample, model core.Model) core.AttackResult {
 	queries := 0
-
-	predictFunc := func(img []float32) int {
-		queries++
-		l, _ := model.Predict(core.Image(img))
-		return l
-	}
-
 	original := sample.Data
 	targetLabel := sample.Label
 
-	xAdv := atk.initialize(original, targetLabel, predictFunc)
-	if xAdv == nil {
+	predictFunc := func(img []float32) int {
+		if ctx.Err() != nil {
+			return targetLabel
+		}
+		queries++
+		l, err := predictContext(ctx, model, core.Image(img))
+		if err != nil {
+			return targetLabel
+		}
+		return l
+	}
+
+	xAdv := atk.initialize(ctx, original, targetLabel, predictFunc)
+	if xAdv == nil || ctx.Err() != nil {
 		return core.AttackResult{
 			SampleID: sample.ID,
 			Distance: 0.0,
@@ -60,16 +71,16 @@ func (atk *HSJA) Attack(sample core.Sample, model core.Model) core.AttackResult 
 		}
 	}
 
-	xAdv = atk.binarySearch(original, xAdv, targetLabel, predictFunc)
+	xAdv = atk.binarySearch(ctx, original, xAdv, targetLabel, predictFunc)
 	dist := mathutils.L2Distance(original, xAdv)
 
 	for i := 0; i < atk.config.MaxIterations; i++ {
-		if queries >= atk.config.MaxQueries {
+		if ctx.Err() != nil || queries >= atk.config.MaxQueries {
 			break
 		}
 
 		delta := atk.computeDelta(float32(dist), i)
-		grad := atk.approximateGradient(xAdv, targetLabel, delta, model, &queries)
+		grad := atk.approximateGradient(ctx, xAdv, targetLabel, delta, model, &queries)
 
 		stepSize := atk.computeStepSize(float32(dist), i)
 		stepVec := mathutils.VectorScale(grad, stepSize)
@@ -77,7 +88,10 @@ func (atk *HSJA) Attack(sample core.Sample, model core.Model) core.AttackResult 
 
 		xNew = mathutils.Clip(xNew, atk.config.ClipMin, atk.config.ClipMax)
 
-		xNew = atk.binarySearch(original, xNew, targetLabel, predictFunc)
+		xNew = atk.binarySearch(ctx, original, xNew, targetLabel, predictFunc)
+		if ctx.Err() != nil {
+			break
+		}
 
 		newDist := mathutils.L2Distance(original, xNew)
 		if newDist < dist {
@@ -93,13 +107,36 @@ func (atk *HSJA) Attack(sample core.Sample, model core.Model) core.AttackResult 
 	}
 }
 
+func predictContext(ctx context.Context, model core.Model, img core.Image) (int, error) {
+	if m, ok := model.(core.ContextModel); ok {
+		return m.PredictContext(ctx, img)
+	}
+	if ctx.Err() != nil {
+		return -1, ctx.Err()
+	}
+	return model.Predict(img)
+}
+
+func predictBatchContext(ctx context.Context, model core.Model, imgs []core.Image) ([]int, error) {
+	if m, ok := model.(core.ContextModel); ok {
+		return m.PredictBatchContext(ctx, imgs)
+	}
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+	return model.PredictBatch(imgs)
+}
+
 // initialize searches for an initial sample that crosses the target boundary.
-func (atk *HSJA) initialize(original []float32, label int, predict func([]float32) int) []float32 {
+func (atk *HSJA) initialize(ctx context.Context, original []float32, label int, predict func([]float32) int) []float32 {
 	if predict(original) != label {
 		return original
 	}
 	inputSize := len(original)
 	for i := 0; i < atk.config.InitEvals; i++ {
+		if ctx.Err() != nil {
+			return nil
+		}
 		noise := mathutils.GenUniform(inputSize, float64(atk.config.ClipMin), float64(atk.config.ClipMax))
 		if predict(noise) != label {
 			return noise
@@ -109,12 +146,15 @@ func (atk *HSJA) initialize(original []float32, label int, predict func([]float3
 }
 
 // binarySearch refines an adversarial sample onto the decision boundary.
-func (atk *HSJA) binarySearch(original, adversarial []float32, targetLabel int, predict func([]float32) int) []float32 {
+func (atk *HSJA) binarySearch(ctx context.Context, original, adversarial []float32, targetLabel int, predict func([]float32) int) []float32 {
 	low := 0.0
 	high := 1.0
 	boundaryPoint := adversarial
 
 	for i := 0; i < 15; i++ {
+		if ctx.Err() != nil {
+			break
+		}
 		mid := (low + high) / 2.0
 		candidate := mathutils.Interpolate(original, adversarial, float32(mid))
 		candidate = mathutils.Clip(candidate, atk.config.ClipMin, atk.config.ClipMax)
@@ -130,7 +170,7 @@ func (atk *HSJA) binarySearch(original, adversarial []float32, targetLabel int, 
 }
 
 // approximateGradient estimates the boundary normal with batched label queries.
-func (atk *HSJA) approximateGradient(sample []float32, label int, delta float32, model core.Model, queries *int) []float32 {
+func (atk *HSJA) approximateGradient(ctx context.Context, sample []float32, label int, delta float32, model core.Model, queries *int) []float32 {
 	numEvals := atk.config.NumEvals
 	inputSize := len(sample)
 
@@ -138,6 +178,9 @@ func (atk *HSJA) approximateGradient(sample []float32, label int, delta float32,
 	noises := make([][]float32, numEvals)
 
 	for j := 0; j < numEvals; j++ {
+		if ctx.Err() != nil {
+			return mathutils.NewVector(inputSize, 0)
+		}
 		noise := mathutils.GenGaussian(inputSize, 0, 1)
 		noise = mathutils.Normalize(noise)
 		noises[j] = noise
@@ -149,7 +192,7 @@ func (atk *HSJA) approximateGradient(sample []float32, label int, delta float32,
 		batchImgs[j] = core.Image(posPoint)
 	}
 
-	preds, err := model.PredictBatch(batchImgs)
+	preds, err := predictBatchContext(ctx, model, batchImgs)
 	if err != nil {
 		return mathutils.NewVector(inputSize, 0)
 	}
