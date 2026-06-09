@@ -681,6 +681,131 @@ func checkHealth(name, baseURL string) serviceHealth {
 	return result
 }
 
+type auditJob struct {
+	ID         string       `json:"id"`
+	Status     string       `json:"status"`
+	Error      string       `json:"error,omitempty"`
+	Report     *auditReport `json:"report,omitempty"`
+	CreatedAt  string       `json:"created_at"`
+	StartedAt  string       `json:"started_at,omitempty"`
+	FinishedAt string       `json:"finished_at,omitempty"`
+}
+
+type auditJobStore struct {
+	mu      sync.Mutex
+	jobs    map[string]*auditJob
+	running string
+	nextID  int64
+}
+
+func newAuditJobStore() *auditJobStore {
+	return &auditJobStore{jobs: make(map[string]*auditJob)}
+}
+
+func (s *auditJobStore) start(runCfg runConfig) (*auditJob, error) {
+	s.mu.Lock()
+	if s.running != "" {
+		active := s.running
+		s.mu.Unlock()
+		return nil, fmt.Errorf("another audit job is already running: %s", active)
+	}
+	s.nextID++
+	job := &auditJob{
+		ID:        fmt.Sprintf("audit-%d", s.nextID),
+		Status:    "running",
+		CreatedAt: time.Now().Format(time.RFC3339),
+		StartedAt: time.Now().Format(time.RFC3339),
+	}
+	s.jobs[job.ID] = job
+	s.running = job.ID
+	s.mu.Unlock()
+
+	go func() {
+		report, err := runAudit(runCfg)
+		if err == nil {
+			err = writeJSONReport(runCfg.JSONReportPath, report)
+		}
+		if err == nil {
+			err = writeHTMLReport(runCfg.HTMLReportPath, report)
+		}
+
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		job.FinishedAt = time.Now().Format(time.RFC3339)
+		if err != nil {
+			job.Status = "failed"
+			job.Error = err.Error()
+		} else {
+			job.Status = "succeeded"
+			job.Report = &report
+		}
+		if s.running == job.ID {
+			s.running = ""
+		}
+	}()
+
+	return job, nil
+}
+
+func (s *auditJobStore) snapshot(id string) (auditJob, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	job, ok := s.jobs[id]
+	if !ok {
+		return auditJob{}, false
+	}
+	copy := *job
+	return copy, true
+}
+
+func buildAuditRunConfig(base runConfig, req auditRequest) (runConfig, error) {
+	runCfg := base
+	preset := req.Preset
+	if preset == "" {
+		preset = "smoke"
+	}
+	if err := applyPreset(&runCfg, preset); err != nil {
+		return runConfig{}, err
+	}
+	if req.AuditMode != "" {
+		runCfg.AuditMode = req.AuditMode
+	}
+	mode, err := normalizeAuditMode(runCfg.AuditMode)
+	if err != nil {
+		return runConfig{}, err
+	}
+	runCfg.AuditMode = mode
+	if req.TargetAPI != "" {
+		runCfg.TargetAPI = req.TargetAPI
+	}
+	if req.ShadowAPI != "" {
+		runCfg.ShadowAPI = req.ShadowAPI
+	}
+	if runCfg.Preset == "custom" {
+		if req.MemberSamples > 0 {
+			runCfg.MemberSampleCount = req.MemberSamples
+		}
+		if req.NonMemberSamples > 0 {
+			runCfg.NonMemberSampleCount = req.NonMemberSamples
+		}
+		if req.Workers > 0 {
+			runCfg.AuditWorkers = req.Workers
+		}
+		if req.MaxQueries > 0 {
+			runCfg.MaxQueries = req.MaxQueries
+		}
+		if req.MaxIterations > 0 {
+			runCfg.MaxIterations = req.MaxIterations
+		}
+		if req.NumEvals > 0 {
+			runCfg.NumEvals = req.NumEvals
+		}
+	}
+	runCfg.JSONReportPath = "output/web_audit_report.json"
+	runCfg.HTMLReportPath = "output/web_audit_report.html"
+	return runCfg, nil
+}
+
 func startWebServer(cfg runConfig, addr string) error {
 	consoleTmpl, err := template.New("console").Parse(webConsoleTemplate)
 	if err != nil {
@@ -688,6 +813,7 @@ func startWebServer(cfg runConfig, addr string) error {
 	}
 
 	mux := http.NewServeMux()
+	auditJobs := newAuditJobStore()
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
@@ -737,6 +863,24 @@ func startWebServer(cfg runConfig, addr string) error {
 		writeJSON(w, resp, http.StatusOK)
 	})
 
+	mux.HandleFunc("/api/audit/status", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		id := r.URL.Query().Get("id")
+		if id == "" {
+			writeJSON(w, map[string]string{"error": "missing job id"}, http.StatusBadRequest)
+			return
+		}
+		job, ok := auditJobs.snapshot(id)
+		if !ok {
+			writeJSON(w, map[string]string{"error": "audit job not found"}, http.StatusNotFound)
+			return
+		}
+		writeJSON(w, job, http.StatusOK)
+	})
+
 	mux.HandleFunc("/api/audit", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -747,67 +891,17 @@ func startWebServer(cfg runConfig, addr string) error {
 			writeJSON(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
 			return
 		}
-		runCfg := cfg
-		preset := req.Preset
-		if preset == "" {
-			preset = "smoke"
-		}
-		if err := applyPreset(&runCfg, preset); err != nil {
-			writeJSON(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
-			return
-		}
-		if req.AuditMode != "" {
-			runCfg.AuditMode = req.AuditMode
-		}
-		mode, err := normalizeAuditMode(runCfg.AuditMode)
+		runCfg, err := buildAuditRunConfig(cfg, req)
 		if err != nil {
 			writeJSON(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
 			return
 		}
-		runCfg.AuditMode = mode
-		if req.TargetAPI != "" {
-			runCfg.TargetAPI = req.TargetAPI
-		}
-		if req.ShadowAPI != "" {
-			runCfg.ShadowAPI = req.ShadowAPI
-		}
-		if runCfg.Preset == "custom" {
-			if req.MemberSamples > 0 {
-				runCfg.MemberSampleCount = req.MemberSamples
-			}
-			if req.NonMemberSamples > 0 {
-				runCfg.NonMemberSampleCount = req.NonMemberSamples
-			}
-			if req.Workers > 0 {
-				runCfg.AuditWorkers = req.Workers
-			}
-			if req.MaxQueries > 0 {
-				runCfg.MaxQueries = req.MaxQueries
-			}
-			if req.MaxIterations > 0 {
-				runCfg.MaxIterations = req.MaxIterations
-			}
-			if req.NumEvals > 0 {
-				runCfg.NumEvals = req.NumEvals
-			}
-		}
-		runCfg.JSONReportPath = "output/web_audit_report.json"
-		runCfg.HTMLReportPath = "output/web_audit_report.html"
-
-		report, err := runAudit(runCfg)
+		job, err := auditJobs.start(runCfg)
 		if err != nil {
-			writeJSON(w, map[string]string{"error": err.Error()}, http.StatusInternalServerError)
+			writeJSON(w, map[string]string{"error": err.Error()}, http.StatusConflict)
 			return
 		}
-		if err := writeJSONReport(runCfg.JSONReportPath, report); err != nil {
-			writeJSON(w, map[string]string{"error": err.Error()}, http.StatusInternalServerError)
-			return
-		}
-		if err := writeHTMLReport(runCfg.HTMLReportPath, report); err != nil {
-			writeJSON(w, map[string]string{"error": err.Error()}, http.StatusInternalServerError)
-			return
-		}
-		writeJSON(w, report, http.StatusOK)
+		writeJSON(w, map[string]string{"job_id": job.ID, "status": job.Status}, http.StatusAccepted)
 	})
 
 	mux.HandleFunc("/reports/latest.html", func(w http.ResponseWriter, r *http.Request) {
@@ -1056,23 +1150,53 @@ const webConsoleTemplate = `<!doctype html>
         '<div><span class="badge '+(s.healthy?'ok':'bad')+'">'+s.name+' '+s.status+'</span> <span class="hint">'+s.url+'</span></div>'
       ).join('');
     }
+    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+    async function readJSON(res) {
+      const text = await res.text();
+      let data = {};
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch (err) {
+          throw new Error('HTTP '+res.status+' 返回了非 JSON 内容：'+text.slice(0, 160));
+        }
+      }
+      if (!res.ok) throw new Error(data.error || ('HTTP '+res.status));
+      return data;
+    }
+    function renderAudit(data) {
+      $('acc').textContent = pct(data.metrics.accuracy);
+      $('precision').textContent = pct(data.metrics.precision);
+      $('recall').textContent = pct(data.metrics.recall);
+      $('riskRate').textContent = pct(data.metrics.high_risk_rate);
+      $('sampleRows').innerHTML = data.samples.map(s =>
+        '<tr><td>'+s.sample_id+'</td><td>'+s.is_member_true+'</td><td><span class="badge '+s.risk_class+'">'+s.risk_level+'</span></td><td>'+s.label+'</td><td>'+num(s.shadow_loss)+'</td><td>'+num(s.mean_boundary_distance)+'</td><td>'+num(s.volatility_cv)+'</td><td>'+s.conclusion+'</td></tr>'
+      ).join('');
+      $('log').textContent = JSON.stringify(data.metrics, null, 2);
+      $('reportLink').style.display = 'inline';
+    }
+    async function waitForAudit(jobId) {
+      for (;;) {
+        await sleep(3000);
+        const q = new URLSearchParams({id: jobId});
+        const job = await readJSON(await fetch('/api/audit/status?' + q.toString(), {cache:'no-store'}));
+        if (job.status === 'failed') throw new Error(job.error || 'audit failed');
+        if (job.status === 'succeeded') {
+          renderAudit(job.report);
+          return;
+        }
+        $('log').textContent = '任务 '+jobId+' 正在运行。开始时间：'+(job.started_at || job.created_at || '--');
+      }
+    }
     async function runAudit() {
       $('runBtn').disabled = true;
-      $('log').textContent = '风险评估进行中。边界搜索需要多次查询目标模型，请保持容器服务运行。';
+      $('log').textContent = '风险评估任务提交中。长任务会在服务器后台运行，页面会自动刷新进度。';
       $('reportLink').style.display = 'none';
       try {
         const res = await fetch('/api/audit', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload())});
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'audit failed');
-        $('acc').textContent = pct(data.metrics.accuracy);
-        $('precision').textContent = pct(data.metrics.precision);
-        $('recall').textContent = pct(data.metrics.recall);
-        $('riskRate').textContent = pct(data.metrics.high_risk_rate);
-        $('sampleRows').innerHTML = data.samples.map(s =>
-          '<tr><td>'+s.sample_id+'</td><td>'+s.is_member_true+'</td><td><span class="badge '+s.risk_class+'">'+s.risk_level+'</span></td><td>'+s.label+'</td><td>'+num(s.shadow_loss)+'</td><td>'+num(s.mean_boundary_distance)+'</td><td>'+num(s.volatility_cv)+'</td><td>'+s.conclusion+'</td></tr>'
-        ).join('');
-        $('log').textContent = JSON.stringify(data.metrics, null, 2);
-        $('reportLink').style.display = 'inline';
+        const job = await readJSON(res);
+        $('log').textContent = '任务 '+job.job_id+' 已提交，等待服务器完成审计。';
+        await waitForAudit(job.job_id);
       } catch (err) {
         $('log').textContent = err.message;
       } finally {
